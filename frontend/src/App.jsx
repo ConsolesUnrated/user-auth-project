@@ -1,5 +1,5 @@
 import React from 'react'
-import ConfirmationPage from './pages/ConfirmationPage'
+import Signup from './pages/Signup'
 
 const styles = {
   app: {
@@ -13,7 +13,7 @@ const styles = {
 function App() {
   return (
     <div style={styles.app}>
-      <ConfirmationPage />
+      <Signup />
     </div>
   )
 }

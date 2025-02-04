@@ -1,5 +1,21 @@
 import React from 'react'
 import Signup from './pages/Signup'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import ConfirmationPage from './pages/ConfirmationPage'
+
+function App() {
+  return (
+    <Router>
+      <div style={styles.app}>
+        <Routes>
+          <Route path="/" element={<Signup />} />
+          <Route path="/confirmation" element={<ConfirmationPage />} />
+        </Routes>
+      </div>
+    </Router>
+  )
+}
+
 
 const styles = {
   app: {
@@ -9,13 +25,4 @@ const styles = {
     fontFamily: 'Arial, sans-serif',
   }
 };
-
-function App() {
-  return (
-    <div style={styles.app}>
-      <Signup />
-    </div>
-  )
-}
-
 export default App

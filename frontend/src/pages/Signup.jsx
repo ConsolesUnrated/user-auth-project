@@ -1,11 +1,20 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Signup = () => {
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // For now, just navigate to confirmation page without any validation
+    navigate('/confirmation');
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.formWrapper}>
         <h1 style={styles.title}>Create Account</h1>
-        <form style={styles.form}>
+        <form style={styles.form} onSubmit={handleSubmit}>
           <input
             type="text"
             placeholder="Username"

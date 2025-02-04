@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -33,6 +33,9 @@ const Signup = () => {
           <button style={styles.button}>
             Sign Up
           </button>
+          <p style={styles.loginText}>
+            Already have an account? <Link to="/login" style={styles.loginLink}>Login</Link>
+          </p>
         </form>
       </div>
     </div>
@@ -93,6 +96,16 @@ const styles = {
     ':hover': {
       backgroundColor: '#357ABD',
     },
+  },
+  loginText: {
+    marginTop: '1rem',
+    textAlign: 'center',
+    color: '#333',
+  },
+  loginLink: {
+    color: '#007bff',
+    textDecoration: 'none',
+    cursor: 'pointer',
   },
 };
 

@@ -1,9 +1,16 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const ConfirmationPage = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    navigate('/');
+  };
+
   return (
     <div style={styles.container}>
-      <button style={styles.logoutButton}>
+      <button style={styles.logoutButton} onClick={handleLogout}>
         Logout
       </button>
       <div style={styles.contentWrapper}>

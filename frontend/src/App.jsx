@@ -1,8 +1,8 @@
 import React from 'react'
-import Signup from './pages/Signup'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import ConfirmationPage from './pages/ConfirmationPage'
-import Login from './pages/login'
+import Signup from './pages/Signup'
+import Login from './pages/Login'
 
 function App() {
   return (
@@ -10,8 +10,9 @@ function App() {
       <div style={styles.app}>
         <Routes>
           <Route path="/" element={<Signup />} />
-          <Route path="/confirmation" element={<ConfirmationPage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/confirmation" element={<ConfirmationPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     </Router>

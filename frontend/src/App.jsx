@@ -2,6 +2,7 @@ import React from 'react'
 import Signup from './pages/Signup'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import ConfirmationPage from './pages/ConfirmationPage'
+import Login from './pages/login'
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Signup />} />
           <Route path="/confirmation" element={<ConfirmationPage />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </div>
     </Router>

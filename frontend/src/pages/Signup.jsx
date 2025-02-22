@@ -176,7 +176,7 @@ const styles = {
     color: 'white',
     border: 'none',
     borderRadius: '4px',
-    fontSize: '1rem',
+    fontSize: '1.2rem',
     cursor: 'pointer',
     transition: 'background-color 0.2s ease',
     marginTop: '1rem',
@@ -207,6 +207,7 @@ const styles = {
     color: '#333',
     fontSize: '0.9rem',
     marginBottom: '0.5rem',
+    marginTop: '0',
   },
   requirementsList: {
     marginTop: '-0.5rem',
@@ -239,8 +240,8 @@ const styles = {
     cursor: 'pointer',
     padding: '0',
     marginTop: '-0.5rem',
-    marginBottom: '0.5rem',
-    alignSelf: 'flex-start',
+    marginBottom: '-0.5rem',
+    alignSelf: 'flex-end',
     marginLeft: '0.5rem',
   },
 };

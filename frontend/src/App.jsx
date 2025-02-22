@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import ConfirmationPage from './pages/ConfirmationPage'
 import Signup from './pages/Signup'
 import Login from './pages/Login'
+import SendResetLinkPage from './pages/SendResetLinkPage'
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
           <Route path="/" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/confirmation" element={<ConfirmationPage />} />
+          <Route path="/sendresetlinkpage" element={<SendResetLinkPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

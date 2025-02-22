@@ -1,38 +1,33 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-const Login = () => {
+const SendResetLinkPage = () => {
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // For now, just navigate to home or dashboard
-    navigate('/confirmation');
+    //navigate('/confirmation');
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.formWrapper}>
-        <h1 style={styles.title}>Login</h1>
+        <h1 style={styles.title}>Forgot Password</h1>
         <form style={styles.form} onSubmit={handleSubmit}>
+          <p style={styles.loginText}>
+            Enter your e-mail address, and we'll give you reset instructions.
+          </p>
           <input
             type="text"
-            placeholder="Username"
+            placeholder="Enter your email"
             style={styles.input}
           />
-          <input
-            type="password"
-            placeholder="Password"
-            style={styles.input}
-          />
-          <p style={styles.loginText}>
-            <Link to="/sendresetlinkpage" style={styles.loginLink}>Forgot Password?</Link>
-          </p>
           <button style={styles.button}>
-            Login
+            Send Reset Link
           </button>
-          <p style={styles.signupText}>
-            Don't have an account? <Link to="/" style={styles.signupLink}>Sign up</Link>
+          <p style={styles.loginText}>
+            Back to <Link to="/login" style={styles.loginLink}>Login</Link>
           </p>
         </form>
       </div>
@@ -64,7 +59,7 @@ const styles = {
   title: {
     fontSize: '2rem',
     color: '#333',
-    marginBottom: '2rem',
+    marginBottom: '1rem',
     textAlign: 'center',
   },
   form: {
@@ -93,6 +88,7 @@ const styles = {
     fontSize: '1rem',
     cursor: 'pointer',
     transition: 'background-color 0.2s ease',
+    marginTop: '0.5rem',
     ':hover': {
       backgroundColor: '#357ABD',
     },
@@ -108,7 +104,8 @@ const styles = {
     cursor: 'pointer',
   },
   loginText: {
-    textAlign: 'right',
+    marginTop: '1rem',
+    textAlign: 'center',
     color: '#333',
   },
   loginLink: {
@@ -116,7 +113,7 @@ const styles = {
     textDecoration: 'none',
     cursor: 'pointer',
   },
-  
+
 };
 
-export default Login;
+export default SendResetLinkPage;

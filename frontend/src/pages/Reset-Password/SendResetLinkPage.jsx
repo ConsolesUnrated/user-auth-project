@@ -7,7 +7,7 @@ const SendResetLinkPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // For now, just navigate to home or dashboard
-    //navigate('/confirmation');
+    navigate('/security-questions');
   };
 
   return (

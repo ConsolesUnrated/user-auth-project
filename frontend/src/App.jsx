@@ -6,18 +6,20 @@ import Login from './pages/Login'
 import SendResetLinkPage from './pages/Reset-Password/SendResetLinkPage'
 import ResetPasswordPage from './pages/Reset-Password/ResetPasswordPage'
 import SecurityQuestionsPage from './pages/Reset-Password/SecurityQuestionsPage'
+import LockedOutPage from './pages/Reset-Password/LockedOutPage'
 
 function App() {
   return (
     <Router>
       <div style={styles.app}>
         <Routes>
-          <Route path="/" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/confirmation" element={<ConfirmationPage />} />
           <Route path="/sendresetlinkpage" element={<SendResetLinkPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/security-questions" element={<SecurityQuestionsPage />} />
+          <Route path="/locked-out" element={<LockedOutPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

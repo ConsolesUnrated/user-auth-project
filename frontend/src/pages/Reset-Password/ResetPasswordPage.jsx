@@ -10,6 +10,7 @@ const ResetPasswordPage = () => {
     navigate('/login');  // Navigate to login after password reset
   };
 
+  // FIX: update html to include pw requirements to be 12 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
   return (
     <div style={styles.container}>
       <div style={styles.formWrapper}>

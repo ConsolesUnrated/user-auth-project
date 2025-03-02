@@ -16,8 +16,7 @@ const Signup = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // For now, just navigate to confirmation page without any validation
-    navigate('/confirmation');
+    navigate('/security-questions-signup');
   };
 
   const handleShowPassword = (e) => {
@@ -112,7 +111,7 @@ const Signup = () => {
               style={styles.input}
             />
           </div>
-          <button style={styles.button}>
+          <button type="submit" style={styles.button}>
             Sign Up
           </button>
           <p style={styles.loginText}>

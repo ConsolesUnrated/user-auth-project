@@ -8,6 +8,13 @@ const ConfirmationPage = () => {
     navigate('/');
   };
 
+  // TODO: Implement the following features on the welcome page:
+  // - Display a greeting with the user's full name: "Hi, (First Name Last Name)"
+  // - Show the login count: "You have logged in X times."
+  // - Display the last login date: "Last login date: Y."
+  // - Provide a download link for the file: company_confidential_file.txt
+  // Ensure proper authentication before allowing file downloads.
+  
   return (
     <div style={styles.container}>
       <button style={styles.logoutButton} onClick={handleLogout}>

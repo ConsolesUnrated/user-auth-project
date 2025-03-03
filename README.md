@@ -4,6 +4,10 @@ A basic user authentication system built with React.js (frontend) and Node.js (b
 ## Project Overview: Secure Web Server & Login System
 Our project is focused on developing a secure web server and authentication system for a small business, ensuring both ease of use and strong security measures. The system will allow users to safely log in, track their login history, and access a confidential company file while protecting against cyber threats.
 
+## User Authentication Flow
+Below is the authentication workflow for this project:
+![User Authentication Flow](./frontend/src/assets/login-signup-workflow-diagram.png)
+
 ## Key Features
 
 ### 1. Secure User Authentication

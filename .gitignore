@@ -32,3 +32,6 @@ out/
 .tmp/
 .vite/
 .eslintcache
+
+#VS Code
+.history/

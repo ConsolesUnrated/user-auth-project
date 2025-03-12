@@ -81,7 +81,7 @@ const styles = {
       justifyContent: 'center',
       padding: '20px',
       textAlign: 'center',
-      marginTop: '80px',
+      marginTop: '-10rem',
       flexGrow: 1,
     },
     message: {

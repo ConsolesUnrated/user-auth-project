@@ -13,7 +13,6 @@ const ConfirmationPage = () => {
   // - Show the login count: "You have logged in X times."
   // - Display the last login date: "Last login date: Y."
   // - Provide a download link for the file: company_confidential_file.txt
-  // Ensure proper authentication before allowing file downloads.
   
   return (
     <div style={styles.container}>

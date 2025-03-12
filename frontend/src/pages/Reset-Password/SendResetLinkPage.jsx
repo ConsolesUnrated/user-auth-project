@@ -24,10 +24,10 @@ const SendResetLinkPage = () => {
             style={styles.input}
           />
           <button style={styles.button}>
-            Send Reset Link
+            Request Password Reset
           </button>
           <p style={styles.loginText}>
-            Back to <Link to="/login" style={styles.loginLink}>Login</Link>
+            Back to <Link to="/login" style={styles.loginLink}>Login</Link>.
           </p>
         </form>
       </div>

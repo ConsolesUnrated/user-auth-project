@@ -1,13 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // For now, just navigate to home or dashboard
     navigate('/confirmation');
+  };
+
+  const handleShowPassword = (e) => {
+    e.preventDefault();
+    setShowPassword(true);
+  };
+
+  const handleHidePassword = () => {
+    setShowPassword(false);
   };
 
   return (
@@ -21,13 +31,22 @@ const Login = () => {
             style={styles.input}
           />
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="Password"
             style={styles.input}
           />
-          <p style={styles.loginText}>
+          <div style={styles.passwordActionsContainer}>
+            <button
+              type="button"
+              style={styles.showPasswordButton}
+              onMouseDown={handleShowPassword}
+              onMouseUp={handleHidePassword}
+              onMouseLeave={handleHidePassword}
+            >
+              show password
+            </button>
             <Link to="/sendresetlinkpage" style={styles.loginLink}>Forgot Password?</Link>
-          </p>
+          </div>
           <button style={styles.button}>
             Login
           </button>
@@ -107,6 +126,12 @@ const styles = {
     textDecoration: 'none',
     cursor: 'pointer',
   },
+  passwordActionsContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
   loginText: {
     textAlign: 'right',
     color: '#333',
@@ -116,7 +141,15 @@ const styles = {
     textDecoration: 'none',
     cursor: 'pointer',
   },
-  
+  showPasswordButton: {
+    background: 'none',
+    border: 'none',
+    color: '#666',
+    fontSize: '0.9rem',
+    cursor: 'pointer',
+    padding: '0',
+    textAlign: 'left',
+  },
 };
 
 export default Login;

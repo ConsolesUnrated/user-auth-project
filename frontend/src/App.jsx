@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import ConfirmationPage from './pages/WelcomePage'
+import WelcomePage from './pages/WelcomePage'
 import Signup from './pages/Sign-up/Signup'
 import Login from './pages/Login'
 import SendResetLinkPage from './pages/Reset-Password/SendResetLinkPage'
@@ -16,7 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/confirmation" element={<ConfirmationPage />} />
+          <Route path="/confirmation" element={<WelcomePage />} />
           <Route path="/sendresetlinkpage" element={<SendResetLinkPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/security-questions" element={<SecurityQuestionsPage />} />

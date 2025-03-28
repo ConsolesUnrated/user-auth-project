@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 
 const Signup = () => {
-  const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [showPasswords, setShowPasswords] = useState(false);
   
@@ -16,7 +14,7 @@ const Signup = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    navigate('/security-questions-signup');
+    // Handle signup logic here
   };
 
   const handleShowPassword = (e) => {
@@ -30,95 +28,93 @@ const Signup = () => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.formWrapper}>
-        <h1 style={styles.title}>Sign Up</h1>
-        <form style={styles.form} onSubmit={handleSubmit}>
-          <div style={styles.nameContainer}>
-            <input
-              type="text"
-              placeholder="First Name"
-              style={{ ...styles.input, ...styles.nameInput }}
-            />
-            <input
-              type="text"
-              placeholder="Last Name"
-              style={{ ...styles.input, ...styles.nameInput }}
-            />
-          </div>
+      <h1 style={styles.title}>Sign Up</h1>
+      <form style={styles.form} onSubmit={handleSubmit}>
+        <div style={styles.nameContainer}>
           <input
             type="text"
-            placeholder="Username"
-            style={styles.input}
+            placeholder="First Name"
+            style={{ ...styles.input, ...styles.nameInput }}
           />
           <input
-            type="email"
-            placeholder="Email"
-            style={styles.input}
+            type="text"
+            placeholder="Last Name"
+            style={{ ...styles.input, ...styles.nameInput }}
           />
-          <input
-            type={showPasswords ? "text" : "password"}
-            placeholder="Password"
-            style={styles.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <div style={styles.requirementsList}>
-            <div style={styles.requirementsGrid}>
-              {Object.entries({
-                '+12 Characters': 'length',
-                'Uppercase': 'uppercase',
-                'Lowercase': 'lowercase',
-                'Number': 'number',
-                'Special Character': 'special',
-              }).map(([text, key]) => (
-                <div key={key} style={styles.requirementItem}>
-                  <span style={{
-                    ...styles.checkmark,
-                    color: passwordValidation[key] ? '#4CAF50' : '#aaa'
-                  }}>
-                    ✓
-                  </span>
-                  <span style={{
-                    ...styles.requirementText,
-                    fontWeight: passwordValidation[key] ? '600' : '400',
-                    color: passwordValidation[key] ? '#333' : '#666'
-                  }}>
-                    {text}
-                  </span>
-                </div>
-              ))}
-            </div>
+        </div>
+        <input
+          type="text"
+          placeholder="Username"
+          style={styles.input}
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          style={styles.input}
+        />
+        <input
+          type={showPasswords ? "text" : "password"}
+          placeholder="Password"
+          style={styles.input}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <div style={styles.requirementsList}>
+          <div style={styles.requirementsGrid}>
+            {Object.entries({
+              '+12 Characters': 'length',
+              'Uppercase': 'uppercase',
+              'Lowercase': 'lowercase',
+              'Number': 'number',
+              'Special Character': 'special',
+            }).map(([text, key]) => (
+              <div key={key} style={styles.requirementItem}>
+                <span style={{
+                  ...styles.checkmark,
+                  color: passwordValidation[key] ? '#4CAF50' : '#aaa'
+                }}>
+                  ✓
+                </span>
+                <span style={{
+                  ...styles.requirementText,
+                  fontWeight: passwordValidation[key] ? '600' : '400',
+                  color: passwordValidation[key] ? '#333' : '#666'
+                }}>
+                  {text}
+                </span>
+              </div>
+            ))}
           </div>
+        </div>
+        <input
+          type={showPasswords ? "text" : "password"}
+          placeholder="Confirm Password"
+          style={styles.input}
+        />
+        <button
+          type="button"
+          style={styles.showPasswordButton}
+          onMouseDown={handleShowPassword}
+          onMouseUp={handleHidePassword}
+          onMouseLeave={handleHidePassword}
+        >
+          show password
+        </button>
+        <div>
+          <p style={styles.birthdayLabel}>Birthday</p>
           <input
-            type={showPasswords ? "text" : "password"}
-            placeholder="Confirm Password"
+            type="text"
+            placeholder="MM/DD/YYYY"
             style={styles.input}
           />
-          <button
-            type="button"
-            style={styles.showPasswordButton}
-            onMouseDown={handleShowPassword}
-            onMouseUp={handleHidePassword}
-            onMouseLeave={handleHidePassword}
-          >
-            show password
-          </button>
-          <div>
-            <p style={styles.birthdayLabel}>Birthday</p>
-            <input
-              type="text"
-              placeholder="MM/DD/YYYY"
-              style={styles.input}
-            />
-          </div>
-          <button type="submit" style={styles.button}>
-            Sign Up
-          </button>
-          <p style={styles.loginText}>
-            Already have an account? <Link to="/login" style={styles.loginLink}>Login</Link>
-          </p>
-        </form>
-      </div>
+        </div>
+        <button type="submit" style={styles.button}>
+          Sign Up
+        </button>
+        <p style={styles.loginText}>
+          Already have an account? Login
+        </p>
+      </form>
     </div>
   );
 };

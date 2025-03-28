@@ -1,8 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const ConfirmEmailPage = () => {
-  const navigate = useNavigate();
+  const handleReturnToLogin = () => {
+    // Handle return to login logic here
+  };
 
   return (
     <div style={styles.container}>
@@ -22,7 +23,7 @@ const ConfirmEmailPage = () => {
         </p>
         <button 
           style={styles.button}
-          onClick={() => navigate('/confirmation')}
+          onClick={handleReturnToLogin}
         >
           Return to Login
         </button>

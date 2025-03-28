@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const SecurityQuestionsPageSignup = () => {
-  const navigate = useNavigate();
   const [selectedQuestions, setSelectedQuestions] = useState(['', '', '']);
 
   const handleQuestionChange = (index, questionId) => {
@@ -13,7 +11,7 @@ const SecurityQuestionsPageSignup = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    navigate('/confirm-email');  // Navigate to confirm email page after verification
+    // Handle security questions submission logic here
   };
 
   return (

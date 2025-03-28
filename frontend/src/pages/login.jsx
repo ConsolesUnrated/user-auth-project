@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
-  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // For now, just navigate to home or dashboard
-    navigate('/confirmation');
+    // Handle login logic here
   };
 
   const handleShowPassword = (e) => {
@@ -45,13 +42,13 @@ const Login = () => {
             >
               show password
             </button>
-            <Link to="/sendresetlinkpage" style={styles.loginLink}>Forgot Password?</Link>
+            <span style={styles.loginLink}>Forgot Password?</span>
           </div>
           <button style={styles.button}>
             Login
           </button>
           <p style={styles.signupText}>
-            Don't have an account? <Link to="/signup" style={styles.signupLink}>Sign up</Link>
+            Don't have an account? Sign up
           </p>
         </form>
       </div>

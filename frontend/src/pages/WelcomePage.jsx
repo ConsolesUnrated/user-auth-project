@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 
 const WelcomePage = () => {
-  const navigate = useNavigate();
   const [userData, setUserData] = useState({
     firstName: 'John',
     lastName: 'Doe',
@@ -11,7 +9,7 @@ const WelcomePage = () => {
   });
 
   const handleLogout = () => {
-    navigate('/');
+    // Handle logout logic here
   };
 
   return (

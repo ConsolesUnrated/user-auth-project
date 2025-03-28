@@ -138,6 +138,8 @@ const Signup = () => {
             type={showPasswords ? "text" : "password"}
             placeholder="Confirm Password"
             style={styles.input}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
           />
           <button
             type="button"

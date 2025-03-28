@@ -1,59 +1,104 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { signUp } from '@aws-amplify/auth';
+import CryptoJS from 'crypto-js';
+import awsExports from '../../aws-exports';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [birthday, setBirthday] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPasswords, setShowPasswords] = useState(false);
-  
+  const [error, setError] = useState(null);
+
   const passwordValidation = {
-    length: password.length >= 12,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    number: /[0-9]/.test(password),
-    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+      length: password.length >= 12,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    navigate('/security-questions-signup');
+  const handleSubmit = async (e) => {
+      e.preventDefault();
+      if(password !== confirmPassword) {
+          setError('Passwords do not match');
+          return;
+      }
+      const clientSecret = process.env.CLIENT_SECRET
+      const secretHash = CryptoJS.HmacSHA256(
+        username + awsExports.aws_user_pools_web_client_id,
+        clientSecret
+      ).toString(CryptoJS.enc.Base64);
+      try {
+          const result = await signUp({
+              username,
+              password,
+              secretHash,
+              attributes: {
+                  email,
+                  given_name: firstName,
+                  family_name: lastName,
+                  birthdate: birthday,
+              },
+          });
+          console.log("Sign up successful:", result);
+          navigate('/confirmation');
+      } catch (err) {
+          console.error('Error signing up:', err);
+          setError(err.message || 'Error signing up');
+      }
   };
 
   const handleShowPassword = (e) => {
-    e.preventDefault();
-    setShowPasswords(true);
+      e.preventDefault();
+      setShowPasswords(true);
   };
 
   const handleHidePassword = () => {
-    setShowPasswords(false);
+      setShowPasswords(false);
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.formWrapper}>
         <h1 style={styles.title}>Sign Up</h1>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
         <form style={styles.form} onSubmit={handleSubmit}>
           <div style={styles.nameContainer}>
             <input
               type="text"
               placeholder="First Name"
               style={{ ...styles.input, ...styles.nameInput }}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
             />
             <input
               type="text"
               placeholder="Last Name"
               style={{ ...styles.input, ...styles.nameInput }}
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
             />
           </div>
           <input
             type="text"
             placeholder="Username"
             style={styles.input}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
           />
           <input
             type="email"
             placeholder="Email"
             style={styles.input}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
           <input
             type={showPasswords ? "text" : "password"}
@@ -109,6 +154,8 @@ const Signup = () => {
               type="text"
               placeholder="MM/DD/YYYY"
               style={styles.input}
+              value={birthday}
+              onChange={(e) => setBirthday(e.target.value)}
             />
           </div>
           <button type="submit" style={styles.button}>
@@ -121,7 +168,7 @@ const Signup = () => {
       </div>
     </div>
   );
-};
+}
 
 const styles = {
   container: {
@@ -137,7 +184,7 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     padding: '2.5rem',
-    marginTop: '-10rem',
+    marginTop: '0',
     width: '100%',
     maxWidth: '440px',
     backgroundColor: 'white',

@@ -132,6 +132,7 @@ const styles = {
     marginBottom: '0.5rem',
   },
   select: {
+    color: '#000',
     padding: '1rem',
     borderRadius: '4px',
     border: '1px solid #ccc',

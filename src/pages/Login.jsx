@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { signIn } from '@aws-amplify/auth';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // For now, just navigate to home or dashboard
-    navigate('/confirmation');
+    try {
+      // Attempt Cognito sign in
+      const user = await signIn(username, password);
+      console.log('Sign in success:', user);
+      navigate('/confirmation');
+    } catch (err) {
+      console.error('Error signing in:', err);
+      setError(err.message || 'Error signing in');
+    }
   };
 
   const handleShowPassword = (e) => {
@@ -24,16 +35,21 @@ const Login = () => {
     <div style={styles.container}>
       <div style={styles.formWrapper}>
         <h1 style={styles.title}>Login</h1>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
         <form style={styles.form} onSubmit={handleSubmit}>
           <input
             type="text"
             placeholder="Username"
             style={styles.input}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
           />
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             style={styles.input}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
           <div style={styles.passwordActionsContainer}>
             <button
@@ -51,7 +67,7 @@ const Login = () => {
             Login
           </button>
           <p style={styles.signupText}>
-            Don't have an account? <Link to="/signup" style={styles.signupLink}>Sign up</Link>
+            Don&apos;t have an account? <Link to="/signup" style={styles.signupLink}>Sign up</Link>
           </p>
         </form>
       </div>

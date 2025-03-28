@@ -1,15 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
+import useAuthStore from '../store/authStore';
 
 const WelcomePage = () => {
-  const [userData, setUserData] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    loginCount: 5,
-    lastLogin: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString() 
-  });
+  const { user, logout } = useAuthStore();
 
   const handleLogout = () => {
-    // Handle logout logic here
+    logout();
   };
 
   return (
@@ -23,9 +19,9 @@ const WelcomePage = () => {
         <div style={styles.checkmark}>✓</div>
         <h1 style={styles.message}>Sign In Successful!</h1>
         <div style={styles.userInfoContainer}>
-          <h2 style={styles.greeting}>Hi, {userData.firstName} {userData.lastName}</h2>
-          <p style={styles.loginInfo}>You have logged in {userData.loginCount} times.</p>
-          <p style={styles.loginInfo}>Last login date: {userData.lastLogin}</p>
+          <h2 style={styles.greeting}>Hi, {user.firstName} {user.lastName}</h2>
+          <p style={styles.loginInfo}>You have logged in {user.loginCount} times.</p>
+          <p style={styles.loginInfo}>Last login date: {user.lastLogin}</p>
           <button 
             style={styles.downloadButton}
           >

@@ -1,11 +1,26 @@
 import React, { useState } from 'react';
+import useAuthStore from '../store/authStore';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const login = useAuthStore(state => state.login);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle login logic here
+    // TODO: Replace with actual API call
+    // For now, simulate a successful login
+    login(
+      {
+        firstName: 'John',
+        lastName: 'Doe',
+        username: username,
+        loginCount: 1,
+        lastLogin: new Date().toLocaleDateString()
+      },
+      'dummy-token' // This will be replaced with actual JWT token
+    );
   };
 
   const handleShowPassword = (e) => {
@@ -26,11 +41,15 @@ const Login = () => {
             type="text"
             placeholder="Username"
             style={styles.input}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
           />
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             style={styles.input}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
           <div style={styles.passwordActionsContainer}>
             <button
@@ -44,7 +63,7 @@ const Login = () => {
             </button>
             <span style={styles.loginLink}>Forgot Password?</span>
           </div>
-          <button style={styles.button}>
+          <button type="submit" style={styles.button}>
             Login
           </button>
           <p style={styles.signupText}>

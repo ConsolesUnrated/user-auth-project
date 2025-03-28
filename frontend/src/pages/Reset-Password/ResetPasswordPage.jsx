@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const ResetPasswordPage = () => {
-  const navigate = useNavigate();
   const [showPasswords, setShowPasswords] = useState(false);
   const [password, setPassword] = useState('');
   
@@ -16,7 +14,7 @@ const ResetPasswordPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    navigate('/login');  // Navigate to login after password reset
+    // Handle password reset logic here
   };
 
   const handleShowPassword = (e) => {

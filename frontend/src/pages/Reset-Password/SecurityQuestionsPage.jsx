@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const SecurityQuestionsPage = () => {
-  const navigate = useNavigate();
   const [selectedQuestions, setSelectedQuestions] = useState(['', '', '']);
 
   const handleQuestionChange = (index, questionId) => {
@@ -13,7 +11,7 @@ const SecurityQuestionsPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    navigate('/reset-password');  // Navigate to reset password page after verification
+    // Handle security questions verification logic here
   };
 
   return (

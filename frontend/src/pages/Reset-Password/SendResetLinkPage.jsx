@@ -1,13 +1,9 @@
 import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 
 const SendResetLinkPage = () => {
-  const navigate = useNavigate();
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    // For now, just navigate to home or dashboard
-    navigate('/security-questions');
+    // Handle reset link sending logic here
   };
 
   return (
@@ -27,7 +23,7 @@ const SendResetLinkPage = () => {
             Request Password Reset
           </button>
           <p style={styles.loginText}>
-            Back to <Link to="/login" style={styles.loginLink}>Login</Link>.
+            Back to Login
           </p>
         </form>
       </div>

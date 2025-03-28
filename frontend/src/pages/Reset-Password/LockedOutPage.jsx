@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import lockIcon from '../../images/locked-svgrepo.svg';
 
 const LockedOutPage = () => {
-  const navigate = useNavigate();
-
   const handleBackToLogin = () => {
-    navigate('/login');
+    // Handle back to login logic here
   };
 
   return (

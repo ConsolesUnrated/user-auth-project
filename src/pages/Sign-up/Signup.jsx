@@ -30,7 +30,7 @@ const Signup = () => {
           setError('Passwords do not match');
           return;
       }
-      const clientSecret = process.env.CLIENT_SECRET
+      const clientSecret = import.meta.env.VITE_CLIENT_SECRET;
       const secretHash = CryptoJS.HmacSHA256(
         username + awsExports.aws_user_pools_web_client_id,
         clientSecret

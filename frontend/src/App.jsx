@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import WelcomePage from './pages/WelcomePage';
 import Signup from './pages/Sign-up/Signup';
 import Login from './pages/login';
@@ -9,22 +10,114 @@ import LockedOutPage from './pages/Reset-Password/LockedOutPage';
 import SecurityQuestionsPageSignup from './pages/Sign-up/SecurityQuestionsPageSignup';
 import ConfirmEmailPage from './pages/Sign-up/ConfirmEmailPage';
 import { AuthProvider } from './context/AuthContext';
-import useAuthStore from './store/authStore';
-
-function AppContent() {
-  const { isAuthenticated } = useAuthStore();
-
-  return (
-    <div style={styles.app}>
-      {isAuthenticated ? <WelcomePage /> : <Login />}
-    </div>
-  );
-}
+import ProtectedRoute from './components/ProtectedRoute';
+import RouteGuard from './components/RouteGuard';
 
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <Router>
+        <div style={styles.app}>
+          <Routes>
+            {/* Public Routes */}
+            <Route 
+              path="/login" 
+              element={
+                <ProtectedRoute requiredAuth={false}>
+                  <Login />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/signup" 
+              element={
+                <ProtectedRoute requiredAuth={false}>
+                  <Signup />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/forgot-password" 
+              element={
+                <ProtectedRoute requiredAuth={false}>
+                  <SendResetLinkPage />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Gated Routes */}
+            <Route 
+              path="/reset-password" 
+              element={
+                <ProtectedRoute>
+                  <RouteGuard 
+                    requiredStep="security_questions_verified"
+                    redirectTo="/security-questions"
+                  >
+                    <ResetPasswordPage />
+                  </RouteGuard>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/security-questions" 
+              element={
+                <ProtectedRoute>
+                  <RouteGuard 
+                    requiredStep="signup_completed"
+                    allowedSteps={['password_recovery_initiated']}
+                    redirectTo="/login"
+                  >
+                    <SecurityQuestionsPage />
+                  </RouteGuard>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/confirm-email" 
+              element={
+                <ProtectedRoute>
+                  <RouteGuard 
+                    requiredStep="security_questions_completed"
+                    redirectTo="/security-questions"
+                  >
+                    <ConfirmEmailPage />
+                  </RouteGuard>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/welcome" 
+              element={
+                <ProtectedRoute>
+                  <RouteGuard 
+                    requiredStep="authenticated"
+                    redirectTo="/login"
+                  >
+                    <WelcomePage />
+                  </RouteGuard>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/account-locked" 
+              element={
+                <ProtectedRoute>
+                  <RouteGuard 
+                    requiredStep="account_locked"
+                    redirectTo="/login"
+                  >
+                    <LockedOutPage />
+                  </RouteGuard>
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Default Route */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </div>
+      </Router>
     </AuthProvider>
   );
 }

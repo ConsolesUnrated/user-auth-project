@@ -73,12 +73,32 @@ const useAuthStore = create((set, get) => ({
   },
 
   // Signup Flow Actions
-  startSignup: (userData) => {
-    set({ 
-      signupInProgress: true,
-      currentStep: 'signup_started',
-      error: null
-    });
+  signupAndRedirect: async (userData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await mockSignupAPI(userData);
+      
+      if (!response || !response.success) {
+        throw new Error('Invalid signup response');
+      }
+
+      // Update auth state
+      set({
+        signupInProgress: true,
+        currentStep: 'signup_started',
+        isLoading: false,
+        error: null
+      });
+
+      // Handle navigation to security questions
+      window.location.href = '/security-questions-signup';
+    } catch (error) {
+      set({ 
+        error: error.message || 'Signup failed', 
+        isLoading: false,
+        signupInProgress: false
+      });
+    }
   },
 
   submitSecurityQuestions: (answers) => {
@@ -212,6 +232,15 @@ const mockResetPasswordAPI = async (newPassword) => {
   // Simulate API call
   await new Promise(resolve => setTimeout(resolve, 1000));
   return true;
+};
+
+const mockSignupAPI = async (userData) => {
+  // Simulate API call
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return {
+    success: true,
+    message: 'Signup initiated successfully'
+  };
 };
 
 export default useAuthStore; 

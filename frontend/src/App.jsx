@@ -19,7 +19,7 @@ import ResetPassword from './pages/Reset-Password/ResetPasswordPage';
 import LockedOutPage from './pages/Reset-Password/LockedOutPage';
 
 // Auth Provider
-import AuthProvider from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import RouteGuard from './components/RouteGuard';
 import useAuthStore from './store/authStore';
@@ -30,19 +30,16 @@ const AppContent = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/login" element={
-        <RouteGuard redirectTo="/welcome">
-          <Login />
-        </RouteGuard>
-      } />
+      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/signup" element={
         <RouteGuard redirectTo="/welcome">
           <Signup />
         </RouteGuard>
       } />
-      <Route path="/forgot-password" element={
+      <Route path="/send-reset-link" element={
         <RouteGuard redirectTo="/welcome">
-          <ForgotPassword />
+          <SendResetLinkPage />
         </RouteGuard>
       } />
 
@@ -54,28 +51,36 @@ const AppContent = () => {
       } />
 
       {/* Signup Flow Routes */}
-      <Route path="/security-questions" element={
+      <Route path="/security-questions-signup" element={
         <RouteGuard 
           requiredFlowState="signupInProgress"
           redirectTo="/signup"
         >
-          <SecurityQuestions />
+          <SecurityQuestionsPageSignup />
         </RouteGuard>
       } />
       <Route path="/confirm-email" element={
         <RouteGuard 
-          requiredFlowState="securityQuestionsSubmitted"
-          redirectTo="/security-questions"
+          requiredFlowState="signupSecurityQuestionsSubmitted"
+          redirectTo="/security-questions-signup"
         >
           <ConfirmEmail />
         </RouteGuard>
       } />
 
       {/* Password Recovery Flow Routes */}
+      <Route path="/security-questions" element={
+        <RouteGuard 
+          requiredFlowState="passwordRecoveryInProgress"
+          redirectTo="/send-reset-link"
+        >
+          <SecurityQuestions />
+        </RouteGuard>
+      } />
       <Route path="/reset-password" element={
         <RouteGuard 
           requiredFlowState="securityVerified"
-          redirectTo="/forgot-password"
+          redirectTo="/security-questions"
         >
           <ResetPassword />
         </RouteGuard>
@@ -85,14 +90,14 @@ const AppContent = () => {
       <Route path="/account-locked" element={
         <RouteGuard 
           requiredFlowState="account_locked"
-          redirectTo="/login"
+          redirectTo="/"
         >
-          <AccountLocked />
+          <LockedOutPage />
         </RouteGuard>
       } />
 
-      {/* Default Route */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      {/* Catch-all route - redirects any undefined routes to base */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

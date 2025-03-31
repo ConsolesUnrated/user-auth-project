@@ -1,9 +1,15 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 
-const ProtectedRoute = ({ children, requiredAuth = true, redirectTo = '/login' }) => {
+const ProtectedRoute = ({ children, requiredAuth = true, redirectTo = '/' }) => {
   const { isAuthenticated } = useAuthStore();
+  const location = useLocation();
+
+  // If we're already on the root path, don't redirect
+  if (location.pathname === '/') {
+    return children;
+  }
 
   if (requiredAuth && !isAuthenticated) {
     return <Navigate to={redirectTo} replace />;

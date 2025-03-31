@@ -25,15 +25,6 @@ const Login = () => {
     }
   };
 
-  const handleShowPassword = (e) => {
-    e.preventDefault();
-    setShowPassword(true);
-  };
-
-  const handleHidePassword = () => {
-    setShowPassword(false);
-  };
-
   return (
     <div style={styles.container}>
       <div style={styles.formWrapper}>
@@ -60,9 +51,9 @@ const Login = () => {
             <button
               type="button"
               style={styles.showPasswordButton}
-              onMouseDown={handleShowPassword}
-              onMouseUp={handleHidePassword}
-              onMouseLeave={handleHidePassword}
+              onMouseDown={() => setShowPassword(true)}
+              onMouseUp={() => setShowPassword(false)}
+              onMouseLeave={() => setShowPassword(false)}
             >
               show password
             </button>
@@ -76,7 +67,7 @@ const Login = () => {
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
           <p style={styles.signupText}>
-            Don't have an account? Sign up
+            Don't have an account? <span style={styles.signupLink}>Sign up</span>
           </p>
         </form>
       </div>
@@ -124,9 +115,6 @@ const styles = {
     fontSize: '1rem',
     transition: 'border-color 0.2s ease',
     outline: 'none',
-    ':focus': {
-      borderColor: '#4A90E2',
-    },
   },
   button: {
     padding: '1rem',
@@ -137,9 +125,6 @@ const styles = {
     fontSize: '1rem',
     cursor: 'pointer',
     transition: 'background-color 0.2s ease',
-    ':hover': {
-      backgroundColor: '#357ABD',
-    },
   },
   signupText: {
     marginTop: '1rem',
@@ -156,10 +141,6 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-  },
-  loginText: {
-    textAlign: 'right',
-    color: '#333',
   },
   loginLink: {
     color: '#007bff',

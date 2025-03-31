@@ -106,4 +106,14 @@ export const authAPI = {
     });
     return handleResponse(response);
   },
+
+  logout: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    return handleResponse(response);
+  },
 }; 

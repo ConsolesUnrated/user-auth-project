@@ -4,14 +4,10 @@ import useAuthStore from '../store/authStore';
 const WelcomePage = () => {
   const { user, logout } = useAuthStore();
 
-  const handleLogout = () => {
-    logout();
-  };
-
   return (
     <div style={styles.container}>
       <div style={styles.navBar}>
-        <button style={styles.logoutButton} onClick={handleLogout}>
+        <button style={styles.logoutButton} onClick={logout}>
           Logout
         </button>
       </div>

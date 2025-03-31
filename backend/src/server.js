@@ -75,6 +75,15 @@ app.post('/api/auth/reset-password', (req, res) => {
   });
 });
 
+// Logout endpoint
+app.post('/api/auth/logout', (req, res) => {
+  console.log('\x1b[32m%s\x1b[0m', 'Successful logout'); // This will show in green in the terminal
+  res.json({
+    success: true,
+    message: 'Logged out successfully'
+  });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

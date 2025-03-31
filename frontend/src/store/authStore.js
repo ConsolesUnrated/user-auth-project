@@ -87,22 +87,38 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  logout: () => {
-    const resetState = {
-      isAuthenticated: false,
-      user: null,
-      token: null,
-      currentStep: null,
-      // Reset all flow states
-      signupInProgress: false,
-      signupSecurityQuestionsSubmitted: false,
-      signupEmailVerified: false,
-      passwordRecoveryInProgress: false,
-      securityVerified: false,
-      recoveryEmailVerified: false
-    };
-    set(resetState);
-    saveState(resetState);
+  logout: async () => {
+    try {
+      // Call logout endpoint
+      await authAPI.logout();
+      
+      // Clear localStorage
+      localStorage.removeItem('authState');
+      
+      // Reset all state
+      const resetState = {
+        isAuthenticated: false,
+        user: null,
+        token: null,
+        currentStep: null,
+        // Reset all flow states
+        signupInProgress: false,
+        signupSecurityQuestionsSubmitted: false,
+        signupEmailVerified: false,
+        passwordRecoveryInProgress: false,
+        securityVerified: false,
+        recoveryEmailVerified: false,
+        isLoading: false,
+        error: null
+      };
+      
+      set(resetState);
+
+      // Handle navigation
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   },
 
   // Signup Flow Actions

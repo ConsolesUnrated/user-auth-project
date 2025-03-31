@@ -19,9 +19,8 @@ const WelcomePage = () => {
         <div style={styles.checkmark}>✓</div>
         <h1 style={styles.message}>Sign In Successful!</h1>
         <div style={styles.userInfoContainer}>
-          <h2 style={styles.greeting}>Hi, {user.firstName} {user.lastName}</h2>
-          <p style={styles.loginInfo}>You have logged in {user.loginCount} times.</p>
-          <p style={styles.loginInfo}>Last login date: {user.lastLogin}</p>
+          <h2 style={styles.greeting}>Hi, {user?.firstName || 'User'} {user?.lastName || ''}</h2>
+          <p style={styles.loginInfo}>Welcome to your dashboard!</p>
           <button 
             style={styles.downloadButton}
           >

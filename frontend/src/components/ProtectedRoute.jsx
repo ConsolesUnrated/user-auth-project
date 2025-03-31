@@ -6,13 +6,8 @@ const ProtectedRoute = ({ children, requiredAuth = true, redirectTo = '/' }) => 
   const { isAuthenticated } = useAuthStore();
   const location = useLocation();
 
-  // If we're already on the root path, don't redirect
-  if (location.pathname === '/') {
-    return children;
-  }
-
   if (requiredAuth && !isAuthenticated) {
-    return <Navigate to={redirectTo} replace />;
+    return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
   if (!requiredAuth && isAuthenticated) {

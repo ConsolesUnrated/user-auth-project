@@ -42,7 +42,7 @@ const Signup = () => {
               secretHash,
               attributes: {
                   email,
-                  given_name: firstName,
+                  name: firstName,
                   family_name: lastName,
                   birthdate: birthday,
               },

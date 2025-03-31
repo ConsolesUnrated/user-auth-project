@@ -1,13 +1,24 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
+// Private
 import WelcomePage from './pages/WelcomePage';
-import Signup from './pages/Signup';
+
+// Public Pages:
+import Signup from './pages/Sign-up/Signup';
 import Login from './pages/Login';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import SecurityQuestions from './pages/SecurityQuestions';
-import ConfirmEmail from './pages/ConfirmEmail';
-import AccountLocked from './pages/AccountLocked';
+import SendResetLinkPage from './pages/Reset-Password/SendResetLinkPage';
+
+// Sign up flow:
+import ConfirmEmail from './pages/Sign-up/ConfirmEmailPage';
+import SecurityQuestionsPageSignup from './pages/Sign-up/SecurityQuestionsPageSignup';
+
+// Reset Password flow:
+import SecurityQuestions from './pages/Reset-Password/SecurityQuestionsPage';
+import ResetPassword from './pages/Reset-Password/ResetPasswordPage';
+import LockedOutPage from './pages/Reset-Password/LockedOutPage';
+
+// Auth Provider
 import AuthProvider from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import RouteGuard from './components/RouteGuard';

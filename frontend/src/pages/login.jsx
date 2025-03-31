@@ -1,26 +1,28 @@
 import React, { useState } from 'react';
 import useAuthStore from '../store/authStore';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const login = useAuthStore(state => state.login);
+  const [showPassword, setShowPassword] = useState(false);
+  const { login, isLoading, error } = useAuthStore();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Replace with actual API call
-    // For now, simulate a successful login
-    login(
-      {
-        firstName: 'John',
-        lastName: 'Doe',
-        username: username,
-        loginCount: 1,
-        lastLogin: new Date().toLocaleDateString()
-      },
-      'dummy-token' // This will be replaced with actual JWT token
-    );
+    try {
+      const success = await login({
+        email: username,
+        password: password
+      });
+      
+      if (success) {
+        navigate('/welcome');
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   };
 
   const handleShowPassword = (e) => {
@@ -36,6 +38,7 @@ const Login = () => {
     <div style={styles.container}>
       <div style={styles.formWrapper}>
         <h1 style={styles.title}>Login</h1>
+        {error && <div style={styles.errorMessage}>{error}</div>}
         <form style={styles.form} onSubmit={handleSubmit}>
           <input
             type="text"
@@ -43,6 +46,7 @@ const Login = () => {
             style={styles.input}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            disabled={isLoading}
           />
           <input
             type={showPassword ? "text" : "password"}
@@ -50,6 +54,7 @@ const Login = () => {
             style={styles.input}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
           />
           <div style={styles.passwordActionsContainer}>
             <button
@@ -63,8 +68,12 @@ const Login = () => {
             </button>
             <span style={styles.loginLink}>Forgot Password?</span>
           </div>
-          <button type="submit" style={styles.button}>
-            Login
+          <button 
+            type="submit" 
+            style={styles.button}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Logging in...' : 'Login'}
           </button>
           <p style={styles.signupText}>
             Don't have an account? Sign up
@@ -166,6 +175,11 @@ const styles = {
     padding: '0',
     textAlign: 'left',
   },
+  errorMessage: {
+    color: 'red',
+    marginBottom: '1rem',
+    textAlign: 'center',
+  }
 };
 
 export default Login;

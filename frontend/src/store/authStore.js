@@ -25,11 +25,16 @@ const useAuthStore = create((set, get) => ({
   setError: (error) => set({ error }),
 
   // Login Flow Actions
-  login: async (credentials) => {
+  loginAndRedirect: async (credentials) => {
     set({ isLoading: true, error: null });
     try {
-      // TODO: Replace with actual API call
       const response = await mockLoginAPI(credentials);
+      
+      if (!response || !response.token) {
+        throw new Error('Invalid login response');
+      }
+
+      // Update auth state
       set({
         isAuthenticated: true,
         user: response.user,
@@ -37,10 +42,17 @@ const useAuthStore = create((set, get) => ({
         currentStep: 'authenticated',
         isLoading: false
       });
-      return true;
+
+      // Handle navigation in the store
+      window.location.href = '/welcome';
     } catch (error) {
-      set({ error: error.message, isLoading: false });
-      return false;
+      set({ 
+        error: error.message || 'Login failed', 
+        isLoading: false,
+        isAuthenticated: false,
+        user: null,
+        token: null
+      });
     }
   },
 

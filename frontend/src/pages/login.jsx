@@ -6,23 +6,23 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading, error } = useAuthStore();
+  const { loginAndRedirect, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const success = await login({
-        email: username,
-        password: password
-      });
-      
-      if (success) {
-        navigate('/welcome');
-      }
-    } catch (error) {
-      console.error('Login failed:', error);
-    }
+    await loginAndRedirect({
+      email: username,
+      password: password
+    });
+  };
+
+  const handleForgotPassword = () => {
+    navigate('/send-reset-link');
+  };
+
+  const handleSignup = () => {
+    navigate('/signup');
   };
 
   return (
@@ -57,7 +57,14 @@ const Login = () => {
             >
               show password
             </button>
-            <span style={styles.loginLink}>Forgot Password?</span>
+            <span 
+              style={styles.loginLink}
+              onClick={handleForgotPassword}
+              role="button"
+              tabIndex={0}
+            >
+              Forgot Password?
+            </span>
           </div>
           <button 
             type="submit" 
@@ -67,7 +74,15 @@ const Login = () => {
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
           <p style={styles.signupText}>
-            Don't have an account? <span style={styles.signupLink}>Sign up</span>
+            Don't have an account? {' '}
+            <span 
+              style={styles.signupLink}
+              onClick={handleSignup}
+              role="button"
+              tabIndex={0}
+            >
+              Sign up
+            </span>
           </p>
         </form>
       </div>

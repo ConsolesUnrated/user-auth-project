@@ -4,7 +4,10 @@ export const passwordRequirements = {
   lowercase: (password) => /[a-z]/.test(password),
   number: (password) => /[0-9]/.test(password),
   special: (password) => /[!@#$%^&*(),.?":{}|<>]/.test(password),
-  match: (password, confirmPassword) => password === confirmPassword,
+  match: (password, confirmPassword) => {
+    if (!password || !confirmPassword) return false;
+    return password === confirmPassword;
+  },
 };
 
 export const validateField = (name, value, formData = {}) => {

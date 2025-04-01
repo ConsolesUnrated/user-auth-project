@@ -3,19 +3,29 @@ import { passwordRequirements } from '../../utils/validation';
 
 const ResetPasswordPage = () => {
   const [showPasswords, setShowPasswords] = useState(false);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [formData, setFormData] = useState({
+    password: '',
+    confirmPassword: ''
+  });
   
   const passwordValidation = Object.keys(passwordRequirements).reduce((acc, key) => ({
     ...acc,
     [key]: key === 'match' 
-      ? passwordRequirements[key](password, confirmPassword)
-      : passwordRequirements[key](password)
+      ? passwordRequirements[key](formData.password, formData.confirmPassword)
+      : passwordRequirements[key](formData.password)
   }), {});
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // Handle password reset logic here
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleShowPassword = (e) => {
@@ -34,10 +44,11 @@ const ResetPasswordPage = () => {
         <form style={styles.form} onSubmit={handleSubmit}>
           <input
             type={showPasswords ? "text" : "password"}
+            name="password"
             placeholder="New Password"
             style={styles.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={formData.password}
+            onChange={handleChange}
           />
           <div style={styles.requirementsList}>
             <div style={styles.requirementsGrid}>
@@ -69,10 +80,11 @@ const ResetPasswordPage = () => {
           </div>
           <input
             type={showPasswords ? "text" : "password"}
+            name="confirmPassword"
             placeholder="Confirm New Password"
             style={styles.input}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            value={formData.confirmPassword}
+            onChange={handleChange}
           />
           <button
             type="button"

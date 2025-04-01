@@ -23,8 +23,8 @@ const Signup = () => {
   const passwordValidation = Object.keys(passwordRequirements).reduce((acc, key) => ({
     ...acc,
     [key]: key === 'match' 
-      ? passwordRequirements[key](password, formData.confirmPassword)
-      : passwordRequirements[key](password)
+      ? passwordRequirements[key](formData.password, formData.confirmPassword)
+      : passwordRequirements[key](formData.password)
   }), {});
 
   const handleChange = (e) => {

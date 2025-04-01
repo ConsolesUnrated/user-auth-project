@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { validateSignup } = require('./middleware/validation');
 const app = express();
 
 // Middleware
@@ -19,8 +20,8 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-// Signup endpoint
-app.post('/api/auth/signup', (req, res) => {
+// Signup endpoint with validation
+app.post('/api/auth/signup', validateSignup, (req, res) => {
   res.json({
     success: true,
     message: 'Signup initiated successfully'

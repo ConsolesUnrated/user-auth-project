@@ -144,7 +144,7 @@ const useAuthStore = create((set, get) => ({
       saveState(newState);
 
       // Navigate to security questions page
-      window.location.href = '/security-questions-signup';
+      window.location.replace('/security-questions-signup');
     } catch (error) {
       const errorState = { 
         error: error.message || 'Signup failed', 
@@ -163,17 +163,33 @@ const useAuthStore = create((set, get) => ({
       if (!response || !response.success) {
         throw new Error('Failed to submit security questions');
       }
-      set({ 
+
+      // Get current state to maintain signup progress
+      const currentState = get();
+
+      // Update auth state while maintaining signup progress
+      const newState = {
+        ...currentState,
+        signupInProgress: true,
         signupSecurityQuestionsSubmitted: true,
         currentStep: 'security_questions_submitted',
         error: null,
         isLoading: false
-      });
+      };
+      
+      // Save state to localStorage
+      set(newState);
+      saveState(newState);
+
+      // Navigate to confirm email page
+      window.location.replace('/confirm-email');
     } catch (error) {
-      set({ 
+      const errorState = {
         error: error.message || 'Failed to submit security questions',
         isLoading: false
-      });
+      };
+      set(errorState);
+      saveState(errorState);
     }
   },
 

@@ -12,12 +12,12 @@ const RouteGuard = ({
 }) => {
   const { 
     currentStep,
-    isSignupInProgress,
-    hasSubmittedSecurityQuestions,
-    isSignupEmailVerified,
-    isPasswordRecoveryInProgress,
-    isSecurityVerified,
-    isRecoveryEmailVerified
+    signupInProgress,
+    signupSecurityQuestionsSubmitted,
+    signupEmailVerified,
+    passwordRecoveryInProgress,
+    securityVerified,
+    recoveryEmailVerified
   } = useAuthStore();
 
   // Helper function to check flow state
@@ -25,12 +25,12 @@ const RouteGuard = ({
     if (!requiredFlowState && !allowedFlowStates.length) return true;
     
     const currentFlowStates = {
-      signupInProgress: isSignupInProgress(),
-      securityQuestionsSubmitted: hasSubmittedSecurityQuestions(),
-      signupEmailVerified: isSignupEmailVerified(),
-      passwordRecoveryInProgress: isPasswordRecoveryInProgress(),
-      securityVerified: isSecurityVerified(),
-      recoveryEmailVerified: isRecoveryEmailVerified()
+      signupInProgress,
+      signupSecurityQuestionsSubmitted,
+      signupEmailVerified,
+      passwordRecoveryInProgress,
+      securityVerified,
+      recoveryEmailVerified
     };
 
     if (requiredFlowState) {

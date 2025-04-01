@@ -30,7 +30,11 @@ const AppContent = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={
+        <RouteGuard redirectTo="/welcome">
+          <Login />
+        </RouteGuard>
+      } />
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/signup" element={
         <RouteGuard redirectTo="/welcome">
@@ -54,6 +58,7 @@ const AppContent = () => {
       <Route path="/security-questions-signup" element={
         <RouteGuard 
           requiredFlowState="signupInProgress"
+          requiredStep="signup_started"
           redirectTo="/signup"
         >
           <SecurityQuestionsPageSignup />
@@ -62,6 +67,7 @@ const AppContent = () => {
       <Route path="/confirm-email" element={
         <RouteGuard 
           requiredFlowState="signupSecurityQuestionsSubmitted"
+          requiredStep="security_questions_submitted"
           redirectTo="/security-questions-signup"
         >
           <ConfirmEmail />
@@ -72,6 +78,7 @@ const AppContent = () => {
       <Route path="/security-questions" element={
         <RouteGuard 
           requiredFlowState="passwordRecoveryInProgress"
+          requiredStep="recovery_started"
           redirectTo="/send-reset-link"
         >
           <SecurityQuestions />
@@ -80,6 +87,7 @@ const AppContent = () => {
       <Route path="/reset-password" element={
         <RouteGuard 
           requiredFlowState="securityVerified"
+          requiredStep="security_verified"
           redirectTo="/security-questions"
         >
           <ResetPassword />
@@ -90,6 +98,7 @@ const AppContent = () => {
       <Route path="/account-locked" element={
         <RouteGuard 
           requiredFlowState="account_locked"
+          requiredStep="account_locked"
           redirectTo="/"
         >
           <LockedOutPage />

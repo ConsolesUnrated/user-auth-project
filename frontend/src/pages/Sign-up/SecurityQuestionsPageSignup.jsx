@@ -1,7 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../../store/authStore';
 
 const SecurityQuestionsPageSignup = () => {
   const [selectedQuestions, setSelectedQuestions] = useState(['', '', '']);
+  const [answers, setAnswers] = useState(['', '', '']);
+  const [formErrors, setFormErrors] = useState({});
+  const [isCheckingState, setIsCheckingState] = useState(true);
+  const navigate = useNavigate();
+  const { submitSecurityQuestions, isLoading, error, signupInProgress, currentStep } = useAuthStore();
+
+  // Add debugging
+  useEffect(() => {
+    console.log('SecurityQuestionsPageSignup mounted');
+    console.log('Current state:', { signupInProgress, currentStep });
+  }, []);
+
+  // Check if we're on the right step
+  useEffect(() => {
+    const checkState = () => {
+      console.log('Checking state:', { signupInProgress, currentStep });
+      if (!signupInProgress || currentStep !== 'signup_started') {
+        console.log('Invalid state, redirecting to signup');
+        navigate('/signup');
+      } else {
+        console.log('State is valid, showing form');
+        setIsCheckingState(false);
+      }
+    };
+
+    // Check state after a short delay to ensure localStorage is loaded
+    const timer = setTimeout(checkState, 100);
+    return () => clearTimeout(timer);
+  }, [signupInProgress, currentStep, navigate]);
 
   const handleQuestionChange = (index, questionId) => {
     const newSelectedQuestions = [...selectedQuestions];
@@ -9,22 +40,75 @@ const SecurityQuestionsPageSignup = () => {
     setSelectedQuestions(newSelectedQuestions);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle security questions submission logic here
+  const handleAnswerChange = (index, value) => {
+    const newAnswers = [...answers];
+    newAnswers[index] = value;
+    setAnswers(newAnswers);
   };
+
+  const validateForm = () => {
+    const errors = {};
+    selectedQuestions.forEach((question, index) => {
+      if (!question) {
+        errors[`question${index}`] = 'Please select a security question';
+      }
+    });
+    answers.forEach((answer, index) => {
+      if (!answer.trim()) {
+        errors[`answer${index}`] = 'Please provide an answer';
+      }
+    });
+    return errors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    try {
+      console.log('Submitting security questions...');
+      const securityQuestionsData = selectedQuestions.map((questionId, index) => ({
+        questionId,
+        answer: answers[index]
+      }));
+
+      await submitSecurityQuestions(securityQuestionsData);
+      console.log('Security questions submitted successfully');
+    } catch (error) {
+      console.error('Failed to submit security questions:', error);
+    }
+  };
+
+  if (isCheckingState) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.formWrapper}>
+          <h1 style={styles.title}>Loading...</h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
       <div style={styles.formWrapper}>
         <h1 style={styles.title}>Set Up Your Security Questions</h1>
+        {error && <div style={styles.errorMessage}>{error}</div>}
         <form style={styles.form} onSubmit={handleSubmit}>
           {[0, 1, 2].map((index) => (
             <div key={index} style={styles.questionGroup}>
               <select 
                 value={selectedQuestions[index]}
                 onChange={(e) => handleQuestionChange(index, e.target.value)}
-                style={styles.select}
+                style={{
+                  ...styles.select,
+                  ...(formErrors[`question${index}`] ? styles.inputError : {})
+                }}
               >
                 <option value="">Select a security question</option>
                 {securityQuestions.map((q) => (
@@ -37,16 +121,31 @@ const SecurityQuestionsPageSignup = () => {
                   </option>
                 ))}
               </select>
+              {formErrors[`question${index}`] && 
+                <div style={styles.fieldError}>{formErrors[`question${index}`]}</div>
+              }
               <input
                 type="text"
                 placeholder="Your answer"
-                style={styles.input}
+                value={answers[index]}
+                onChange={(e) => handleAnswerChange(index, e.target.value)}
+                style={{
+                  ...styles.input,
+                  ...(formErrors[`answer${index}`] ? styles.inputError : {})
+                }}
               />
+              {formErrors[`answer${index}`] && 
+                <div style={styles.fieldError}>{formErrors[`answer${index}`]}</div>
+              }
             </div>
           ))}
-          <p style={styles.errorMessage}>Please save these security questions and answers in a secure location. You'll need them to recover your account if you forget your password.</p>
-          <button style={styles.button}>
-            Submit
+          <p style={styles.warningMessage}>Please save these security questions and answers in a secure location. You'll need them to recover your account if you forget your password.</p>
+          <button 
+            type="submit" 
+            style={styles.button}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Submitting...' : 'Submit'}
           </button>
         </form>
       </div>
@@ -155,6 +254,27 @@ const styles = {
       boxShadow: '0 0 0 3px rgba(74, 144, 226, 0.1)',
     },
   },
+  inputError: {
+    borderColor: '#ff3333',
+    backgroundColor: '#fff8f8',
+  },
+  fieldError: {
+    color: '#ff3333',
+    fontSize: '0.8rem',
+    marginTop: '0.25rem',
+    marginLeft: '0.25rem',
+  },
+  errorMessage: {
+    color: '#ff3333',
+    marginBottom: '1rem',
+    textAlign: 'center',
+  },
+  warningMessage: {
+    color: '#666',
+    fontSize: '0.9rem',
+    textAlign: 'center',
+    marginTop: '1rem',
+  }
 };
 
 export default SecurityQuestionsPageSignup; 

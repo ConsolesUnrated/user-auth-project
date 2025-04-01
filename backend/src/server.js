@@ -31,6 +31,7 @@ app.post('/api/auth/signup', validateSignup, (req, res) => {
 
 // Security Questions endpoint (for signup)
 app.post('/api/auth/security-questions-signup', (req, res) => {
+  console.log('\x1b[36m%s\x1b[0m', 'Received security questions submission:', req.body); // This will show in cyan
   res.json({
     success: true,
     message: 'Security questions submitted successfully'

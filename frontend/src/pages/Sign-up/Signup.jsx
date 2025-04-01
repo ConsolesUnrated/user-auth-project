@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
+import { validateField, passwordRequirements } from '../../utils/validation';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -12,18 +13,17 @@ const Signup = () => {
     confirmPassword: '',
     birthday: ''
   });
+  const [formErrors, setFormErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [password, setPassword] = useState('');
   const [showPasswords, setShowPasswords] = useState(false);
   const navigate = useNavigate();
   const { signupAndRedirect, isLoading, error } = useAuthStore();
   
-  const passwordValidation = {
-    length: password.length >= 12,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    number: /[0-9]/.test(password),
-    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-  };
+  const passwordValidation = Object.keys(passwordRequirements).reduce((acc, key) => ({
+    ...acc,
+    [key]: passwordRequirements[key](password)
+  }), {});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,10 +34,45 @@ const Signup = () => {
     if (name === 'password') {
       setPassword(value);
     }
+    // Validate field if it's been touched
+    if (touched[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: validateField(name, value, formData)
+      }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
+    setFormErrors(prev => ({
+      ...prev,
+      [name]: validateField(name, value, formData)
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate all fields
+    const errors = {};
+    Object.keys(formData).forEach(key => {
+      const error = validateField(key, formData[key], formData);
+      if (error) errors[key] = error;
+    });
+
+    setFormErrors(errors);
+    setTouched(Object.keys(formData).reduce((acc, key) => ({...acc, [key]: true}), {}));
+
+    // If there are any errors, don't submit
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
+
     await signupAndRedirect(formData);
   };
 
@@ -54,6 +89,12 @@ const Signup = () => {
     navigate('/');
   };
 
+  const getInputStyle = (name) => ({
+    ...styles.input,
+    ...(name === 'firstName' || name === 'lastName' ? styles.nameInput : {}),
+    ...(touched[name] && formErrors[name] ? styles.inputError : {})
+  });
+
   return (
     <div style={styles.container}>
       <div style={styles.formWrapper}>
@@ -61,52 +102,86 @@ const Signup = () => {
         {error && <div style={styles.errorMessage}>{error}</div>}
         <form style={styles.form} onSubmit={handleSubmit}>
           <div style={styles.nameContainer}>
-            <input
-              type="text"
-              name="firstName"
-              placeholder="First Name"
-              style={{ ...styles.input, ...styles.nameInput }}
-              value={formData.firstName}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
-            <input
-              type="text"
-              name="lastName"
-              placeholder="Last Name"
-              style={{ ...styles.input, ...styles.nameInput }}
-              value={formData.lastName}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
+            <div style={styles.inputWrapper}>
+              <input
+                type="text"
+                name="firstName"
+                placeholder="First Name"
+                style={getInputStyle('firstName')}
+                value={formData.firstName}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                disabled={isLoading}
+              />
+              {touched.firstName && formErrors.firstName && 
+                <div style={styles.fieldError}>{formErrors.firstName}</div>
+              }
+            </div>
+            <div style={styles.inputWrapper}>
+              <input
+                type="text"
+                name="lastName"
+                placeholder="Last Name"
+                style={getInputStyle('lastName')}
+                value={formData.lastName}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                disabled={isLoading}
+              />
+              {touched.lastName && formErrors.lastName && 
+                <div style={styles.fieldError}>{formErrors.lastName}</div>
+              }
+            </div>
           </div>
-          <input
-            type="text"
-            name="username"
-            placeholder="Username"
-            style={styles.input}
-            value={formData.username}
-            onChange={handleChange}
-            disabled={isLoading}
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            style={styles.input}
-            value={formData.email}
-            onChange={handleChange}
-            disabled={isLoading}
-          />
-          <input
-            type={showPasswords ? "text" : "password"}
-            name="password"
-            placeholder="Password"
-            style={styles.input}
-            value={formData.password}
-            onChange={handleChange}
-            disabled={isLoading}
-          />
+
+          <div style={styles.inputWrapper}>
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              style={getInputStyle('username')}
+              value={formData.username}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              disabled={isLoading}
+            />
+            {touched.username && formErrors.username && 
+              <div style={styles.fieldError}>{formErrors.username}</div>
+            }
+          </div>
+
+          <div style={styles.inputWrapper}>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              style={getInputStyle('email')}
+              value={formData.email}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              disabled={isLoading}
+            />
+            {touched.email && formErrors.email && 
+              <div style={styles.fieldError}>{formErrors.email}</div>
+            }
+          </div>
+
+          <div style={styles.inputWrapper}>
+            <input
+              type={showPasswords ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              style={getInputStyle('password')}
+              value={formData.password}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              disabled={isLoading}
+            />
+            {touched.password && formErrors.password && 
+              <div style={styles.fieldError}>{formErrors.password}</div>
+            }
+          </div>
+
           <div style={styles.requirementsList}>
             <div style={styles.requirementsGrid}>
               {Object.entries({
@@ -134,15 +209,23 @@ const Signup = () => {
               ))}
             </div>
           </div>
-          <input
-            type={showPasswords ? "text" : "password"}
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            style={styles.input}
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            disabled={isLoading}
-          />
+
+          <div style={styles.inputWrapper}>
+            <input
+              type={showPasswords ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              style={getInputStyle('confirmPassword')}
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              disabled={isLoading}
+            />
+            {touched.confirmPassword && formErrors.confirmPassword && 
+              <div style={styles.fieldError}>{formErrors.confirmPassword}</div>
+            }
+          </div>
+
           <button
             type="button"
             style={styles.showPasswordButton}
@@ -152,18 +235,24 @@ const Signup = () => {
           >
             show password
           </button>
-          <div>
+
+          <div style={styles.inputWrapper}>
             <p style={styles.birthdayLabel}>Birthday</p>
             <input
               type="text"
               name="birthday"
               placeholder="MM/DD/YYYY"
-              style={styles.input}
+              style={getInputStyle('birthday')}
               value={formData.birthday}
               onChange={handleChange}
+              onBlur={handleBlur}
               disabled={isLoading}
             />
+            {touched.birthday && formErrors.birthday && 
+              <div style={styles.fieldError}>{formErrors.birthday}</div>
+            }
           </div>
+
           <button 
             type="submit" 
             style={styles.button}
@@ -299,6 +388,20 @@ const styles = {
     color: 'red',
     marginBottom: '1rem',
     textAlign: 'center',
+  },
+  inputWrapper: {
+    width: '100%',
+    marginBottom: '0.5rem',
+  },
+  inputError: {
+    borderColor: '#ff3333',
+    backgroundColor: '#fff8f8',
+  },
+  fieldError: {
+    color: '#ff3333',
+    fontSize: '0.8rem',
+    marginTop: '0.25rem',
+    marginLeft: '0.25rem',
   }
 };
 

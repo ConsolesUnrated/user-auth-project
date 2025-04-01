@@ -75,7 +75,11 @@ const Signup = () => {
       return;
     }
 
-    await signupAndRedirect(formData);
+    try {
+      await signupAndRedirect(formData);
+    } catch (error) {
+      console.error('Signup failed:', error);
+    }
   };
 
   const handleShowPassword = (e) => {

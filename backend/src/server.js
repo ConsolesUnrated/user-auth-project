@@ -22,6 +22,7 @@ app.post('/api/auth/login', (req, res) => {
 
 // Signup endpoint with validation
 app.post('/api/auth/signup', validateSignup, (req, res) => {
+  console.log('\x1b[36m%s\x1b[0m', 'Received signup request with data:', req.body); // This will show in cyan
   res.json({
     success: true,
     message: 'Signup initiated successfully'

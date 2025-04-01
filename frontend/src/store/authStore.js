@@ -132,21 +132,27 @@ const useAuthStore = create((set, get) => ({
       }
 
       // Update auth state
-      set({
+      const newState = {
         signupInProgress: true,
         currentStep: 'signup_started',
         isLoading: false,
         error: null
-      });
+      };
+      
+      // Save state to localStorage
+      set(newState);
+      saveState(newState);
 
-      // Handle navigation to security questions
+      // Navigate to security questions page
       window.location.href = '/security-questions-signup';
     } catch (error) {
-      set({ 
+      const errorState = { 
         error: error.message || 'Signup failed', 
         isLoading: false,
         signupInProgress: false
-      });
+      };
+      set(errorState);
+      saveState(errorState);
     }
   },
 

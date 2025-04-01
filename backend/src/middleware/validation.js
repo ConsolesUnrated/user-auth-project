@@ -1,5 +1,5 @@
 const validateSignup = (req, res, next) => {
-  const { firstName, lastName, username, email, password, birthday } = req.body;
+  const { firstName, lastName, username, email, password, confirmPassword, birthday } = req.body;
   const errors = {};
 
   // First Name validation
@@ -33,6 +33,11 @@ const validateSignup = (req, res, next) => {
   
   if (passwordErrors.length > 0) {
     errors.password = `Password must contain ${passwordErrors.join(', ')}`;
+  }
+
+  // Password matching validation
+  if (!confirmPassword || password !== confirmPassword) {
+    errors.confirmPassword = 'Passwords do not match';
   }
 
   // Birthday validation

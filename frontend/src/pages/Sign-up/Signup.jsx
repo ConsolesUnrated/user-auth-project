@@ -22,7 +22,9 @@ const Signup = () => {
   
   const passwordValidation = Object.keys(passwordRequirements).reduce((acc, key) => ({
     ...acc,
-    [key]: passwordRequirements[key](password)
+    [key]: key === 'match' 
+      ? passwordRequirements[key](password, formData.confirmPassword)
+      : passwordRequirements[key](password)
   }), {});
 
   const handleChange = (e) => {
@@ -190,6 +192,7 @@ const Signup = () => {
                 'Lowercase': 'lowercase',
                 'Number': 'number',
                 'Special Character': 'special',
+                'Passwords Match': 'match',
               }).map(([text, key]) => (
                 <div key={key} style={styles.requirementItem}>
                   <span style={{

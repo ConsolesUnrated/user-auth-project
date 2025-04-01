@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
+import { passwordRequirements } from '../../utils/validation';
 
 const ResetPasswordPage = () => {
   const [showPasswords, setShowPasswords] = useState(false);
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   
-  const passwordValidation = {
-    length: password.length >= 12,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    number: /[0-9]/.test(password),
-    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-  };
+  const passwordValidation = Object.keys(passwordRequirements).reduce((acc, key) => ({
+    ...acc,
+    [key]: key === 'match' 
+      ? passwordRequirements[key](password, confirmPassword)
+      : passwordRequirements[key](password)
+  }), {});
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -46,6 +47,7 @@ const ResetPasswordPage = () => {
                 'Lowercase': 'lowercase',
                 'Number': 'number',
                 'Special Character': 'special',
+                'Passwords Match': 'match',
               }).map(([text, key]) => (
                 <div key={key} style={styles.requirementItem}>
                   <span style={{
@@ -69,6 +71,8 @@ const ResetPasswordPage = () => {
             type={showPasswords ? "text" : "password"}
             placeholder="Confirm New Password"
             style={styles.input}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
           />
           <button
             type="button"

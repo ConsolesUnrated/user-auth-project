@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Toast from './components/Toast';
 
@@ -27,10 +27,16 @@ import useAuthStore from './store/authStore';
 
 const AppContent = () => {
   const { isAuthenticated } = useAuthStore();
-  const [toast, setToast] = useState({
-    message: 'Thank you! Your email has been successfully confirmed.',
-    type: 'success'
-  });
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    const handleToast = (event) => {
+      setToast(event.detail);
+    };
+
+    window.addEventListener('showToast', handleToast);
+    return () => window.removeEventListener('showToast', handleToast);
+  }, []);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });

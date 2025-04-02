@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useAuthStore from '../store/authStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -8,6 +8,32 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { loginAndRedirect, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const emailVerified = params.get('emailVerified');
+    
+    if (emailVerified === 'true') {
+      window.dispatchEvent(new CustomEvent('showToast', {
+        detail: {
+          message: 'Thank you! Your email has been successfully confirmed. Please login.',
+          type: 'success'
+        }
+      }));
+      // Clean up the URL
+      navigate('/', { replace: true });
+    } else if (emailVerified === 'false') {
+      window.dispatchEvent(new CustomEvent('showToast', {
+        detail: {
+          message: 'Failed to verify email. Please try again.',
+          type: 'error'
+        }
+      }));
+      // Clean up the URL
+      navigate('/', { replace: true });
+    }
+  }, [location, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

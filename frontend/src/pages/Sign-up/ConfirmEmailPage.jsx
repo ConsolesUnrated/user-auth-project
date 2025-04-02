@@ -1,9 +1,30 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import useAuthStore from '../../store/authStore';
 
 const ConfirmEmailPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { verifySignupEmail, isLoading, error } = useAuthStore();
   
+  useEffect(() => {
+    const verifyEmail = async () => {
+      const token = new URLSearchParams(location.search).get('token');
+      if (token) {
+        try {
+          await verifySignupEmail(token);
+          // Redirect to login with verification status
+          navigate('/?emailVerified=true');
+        } catch (error) {
+          // Redirect to login with error status
+          navigate('/?emailVerified=false');
+        }
+      }
+    };
+
+    verifyEmail();
+  }, [location, navigate, verifySignupEmail]);
+
   const handleReturnToLogin = () => {
     navigate('/');
   };

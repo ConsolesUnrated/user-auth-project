@@ -1,74 +1,59 @@
 const validateSignup = (req, res, next) => {
-  const { firstName, lastName, username, email, password, confirmPassword, birthday } = req.body;
-  const errors = {};
+  const { 
+    username,
+    email, 
+    password,
+    confirmPassword,
+    firstName, 
+    lastName,
+    birthday
+  } = req.body;
 
-  // First Name validation
-  if (!firstName || firstName.trim().length === 0) {
-    errors.firstName = 'First name is required';
+  // Check if all required fields are present
+  if (!username || !email || !password || !confirmPassword || !firstName || !lastName || !birthday) {
+    return res.status(400).json({ error: 'All fields are required' });
   }
 
-  // Last Name validation
-  if (!lastName || lastName.trim().length === 0) {
-    errors.lastName = 'Last name is required';
+  // Validate username (alphanumeric, 3-20 characters)
+  if (!/^[a-zA-Z0-9]{3,20}$/.test(username)) {
+    return res.status(400).json({ error: 'Username must be 3-20 alphanumeric characters' });
   }
 
-  // Username validation
-  if (!username || username.trim().length < 3) {
-    errors.username = 'Username must be at least 3 characters';
-  }
-
-  // Email validation
+  // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email)) {
-    errors.email = 'Valid email is required';
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
   }
 
-  // Password validation
-  const passwordErrors = [];
-  if (!password || password.length < 12) passwordErrors.push('at least 12 characters');
-  if (!/[A-Z]/.test(password)) passwordErrors.push('an uppercase letter');
-  if (!/[a-z]/.test(password)) passwordErrors.push('a lowercase letter');
-  if (!/[0-9]/.test(password)) passwordErrors.push('a number');
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) passwordErrors.push('a special character');
-  
-  if (passwordErrors.length > 0) {
-    errors.password = `Password must contain ${passwordErrors.join(', ')}`;
+  // Validate password (at least 6 characters)
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters long' });
   }
 
-  // Password matching validation
-  if (!confirmPassword || password !== confirmPassword) {
-    errors.confirmPassword = 'Passwords do not match';
+  // Validate password match
+  if (password !== confirmPassword) {
+    return res.status(400).json({ error: 'Passwords do not match' });
   }
 
-  // Birthday validation
-  const birthdayRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/;
-  if (!birthday || !birthdayRegex.test(birthday)) {
-    errors.birthday = 'Valid birthday in MM/DD/YYYY format is required';
-  } else {
-    // Additional date validation (e.g., check if it's a valid date, not in future)
-    const [month, day, year] = birthday.split('/').map(Number);
-    const birthdayDate = new Date(year, month - 1, day);
-    const today = new Date();
-    
-    if (birthdayDate > today) {
-      errors.birthday = 'Birthday cannot be in the future';
-    }
-    
-    if (year < 1900) {
-      errors.birthday = 'Invalid birth year';
-    }
+  // Validate names (no numbers or special characters)
+  const nameRegex = /^[a-zA-Z\s-]{2,30}$/;
+  if (!nameRegex.test(firstName) || !nameRegex.test(lastName)) {
+    return res.status(400).json({ error: 'Names can only contain letters, spaces, and hyphens (2-30 characters)' });
   }
 
-  if (Object.keys(errors).length > 0) {
-    return res.status(400).json({ 
-      success: false, 
-      errors 
-    });
+  // Validate birthday format (YYYY-MM-DD)
+  const birthdayRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!birthdayRegex.test(birthday)) {
+    return res.status(400).json({ error: 'Invalid birthday format (YYYY-MM-DD)' });
+  }
+
+  // Validate birthday is in the past
+  const birthdayDate = new Date(birthday);
+  if (birthdayDate > new Date()) {
+    return res.status(400).json({ error: 'Birthday must be in the past' });
   }
 
   next();
 };
 
-module.exports = {
-  validateSignup
-}; 
+module.exports = { validateSignup }; 

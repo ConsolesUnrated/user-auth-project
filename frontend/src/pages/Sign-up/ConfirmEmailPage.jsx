@@ -1,8 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const ConfirmEmailPage = () => {
+  const navigate = useNavigate();
+  
   const handleReturnToLogin = () => {
-    // Handle return to login logic here
+    navigate('/');
   };
 
   return (
@@ -19,7 +22,7 @@ const ConfirmEmailPage = () => {
           Please check your inbox and spam/junk folders to verify your account.
         </p>
         <p style={styles.redirectInfo}>
-          After confirming your email, you will be automatically redirected and signed in.
+          After confirming your email, you will be automatically redirected to the login page.
         </p>
         <button 
           style={styles.button}

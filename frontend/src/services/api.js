@@ -3,8 +3,21 @@ const API_BASE_URL = 'http://localhost:3001/api';
 // Helper function to handle API responses
 const handleResponse = async (response) => {
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'API request failed');
+    const errorData = await response.json();
+    let errorMessage = 'API request failed';
+    
+    if (errorData.message) {
+      // For authentication errors, provide a generic message
+      if (response.status === 401 || response.status === 404) {
+        errorMessage = 'Invalid credentials. Please try again.';
+      } else if (response.status === 429) {
+        errorMessage = 'Too many failed attempts. Please try again later.';
+      } else {
+        errorMessage = errorData.message;
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
   return response.json();
 };

@@ -6,6 +6,7 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [inputErrors, setInputErrors] = useState({});
   const { loginAndRedirect, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,8 +36,21 @@ const Login = () => {
     }
   }, [location, navigate]);
 
+  useEffect(() => {
+    if (error) {
+      // Show a generic error message for all authentication failures
+      setInputErrors({
+        username: '',
+        password: 'Invalid credentials. Please try again.'
+      });
+    } else {
+      setInputErrors({});
+    }
+  }, [error]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setInputErrors({});
     await loginAndRedirect({
       email: username,
       password: password
@@ -51,28 +65,38 @@ const Login = () => {
     navigate('/signup');
   };
 
+  const getInputStyle = (field) => ({
+    ...styles.input,
+    ...(inputErrors[field] ? styles.inputError : {})
+  });
+
   return (
     <div style={styles.container}>
       <div style={styles.formWrapper}>
         <h1 style={styles.title}>Login</h1>
-        {error && <div style={styles.errorMessage}>{error}</div>}
         <form style={styles.form} onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Username"
-            style={styles.input}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            disabled={isLoading}
-          />
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            style={styles.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-          />
+          <div style={styles.inputWrapper}>
+            <input
+              type="text"
+              placeholder="Username"
+              style={getInputStyle('username')}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading}
+            />
+            {inputErrors.username && <div style={styles.fieldError}>{inputErrors.username}</div>}
+          </div>
+          <div style={styles.inputWrapper}>
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              style={getInputStyle('password')}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+            />
+            {inputErrors.password && <div style={styles.fieldError}>{inputErrors.password}</div>}
+          </div>
           <div style={styles.passwordActionsContainer}>
             <button
               type="button"
@@ -149,6 +173,10 @@ const styles = {
     width: '100%',
     gap: '1rem',
   },
+  inputWrapper: {
+    width: '100%',
+    marginBottom: '0.5rem',
+  },
   input: {
     padding: '1rem',
     borderRadius: '4px',
@@ -156,6 +184,18 @@ const styles = {
     fontSize: '1rem',
     transition: 'border-color 0.2s ease',
     outline: 'none',
+    width: '100%',
+    boxSizing: 'border-box',
+  },
+  inputError: {
+    borderColor: '#ff3333',
+    backgroundColor: '#fff8f8',
+  },
+  fieldError: {
+    color: '#ff3333',
+    fontSize: '0.8rem',
+    marginTop: '0.25rem',
+    marginLeft: '0.25rem',
   },
   button: {
     padding: '1rem',
@@ -166,6 +206,7 @@ const styles = {
     fontSize: '1rem',
     cursor: 'pointer',
     transition: 'background-color 0.2s ease',
+    width: '100%',
   },
   signupText: {
     marginTop: '1rem',
@@ -198,9 +239,13 @@ const styles = {
     textAlign: 'left',
   },
   errorMessage: {
-    color: 'red',
+    color: '#ff3333',
     marginBottom: '1rem',
     textAlign: 'center',
+    backgroundColor: '#fff8f8',
+    padding: '0.5rem',
+    borderRadius: '4px',
+    border: '1px solid #ff3333',
   }
 };
 

@@ -29,6 +29,7 @@ app.post('/api/auth/login', async (req, res) => {
         'INSERT INTO login_history (email, ip_address, status, failure_reason) VALUES ($1, $2, $3, $4)',
         [email, req.ip, 'failed', 'User not found']
       );
+      console.log(`Login failed: ${email} - User not found`);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -42,6 +43,7 @@ app.post('/api/auth/login', async (req, res) => {
         'INSERT INTO login_history (user_id, email, ip_address, status, failure_reason) VALUES ($1, $2, $3, $4, $5)',
         [user.id, email, req.ip, 'failed', 'Invalid password']
       );
+      console.log(`Login failed: ${email} - Invalid password`);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 

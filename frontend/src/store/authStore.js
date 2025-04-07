@@ -265,7 +265,7 @@ const useAuthStore = create((set, get) => ({
   },
 
   // Add new method for handling security questions verification flow
-  handleSecurityQuestionsVerification: async (answers, navigate) => {
+  handleSecurityQuestionsVerification: async (answers) => {
     set({ isLoading: true, error: null });
     try {
       const response = await authAPI.verifySecurityQuestions(answers);
@@ -277,24 +277,16 @@ const useAuthStore = create((set, get) => ({
           isLoading: false
         });
         
-        // Only navigate if navigate function is provided
-        if (navigate) {
-          navigate('/reset-password');
-        }
-        
+        // Navigate to reset password page on success
+        window.location.href = '/reset-password';
         return { success: true };
       } else if (response.attemptsLeft === 0) {
-        // Account is locked
+        // Account is locked, navigate to locked out page
         set({ isLoading: false });
-        
-        // Only navigate if navigate function is provided
-        if (navigate) {
-          navigate('/locked-out');
-        }
-        
+        window.location.href = '/locked-out';
         return { success: false, locked: true };
       } else {
-        // Return attempts info
+        // Return attempts info without navigation
         set({ isLoading: false });
         return { 
           success: false, 
@@ -355,6 +347,8 @@ const useAuthStore = create((set, get) => ({
       if (!response || !response.success) {
         throw new Error('Failed to reset password');
       }
+      
+      // Update state
       set({
         passwordRecoveryInProgress: false,
         securityVerified: false,
@@ -362,6 +356,9 @@ const useAuthStore = create((set, get) => ({
         currentStep: 'password_reset_completed',
         isLoading: false
       });
+      
+      // Navigate to login page
+      window.location.href = '/login';
       return true;
     } catch (error) {
       set({ error: error.message, isLoading: false });

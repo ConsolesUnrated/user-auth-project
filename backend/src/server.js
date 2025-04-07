@@ -473,7 +473,12 @@ app.post('/api/auth/reset-password', async (req, res) => {
       [passwordHash, userId]
     );
 
-    logDatabaseOperation('Password Reset', { email });
+    // Log the password reset with more details
+    logDatabaseOperation('Password Reset Successfully Completed', { 
+      email,
+      userId,
+      timestamp: new Date().toISOString()
+    });
     
     res.json({
       success: true,

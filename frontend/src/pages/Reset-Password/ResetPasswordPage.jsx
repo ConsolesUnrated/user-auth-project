@@ -31,12 +31,12 @@ const ResetPasswordPage = () => {
     }
 
     try {
+      // authStore.resetPassword will handle the navigation to login page
       const success = await authStore.resetPassword(formData.password);
-      if (success) {
-        navigate('/login');
-      } else {
+      if (!success) {
         setError('Failed to reset password. Please try again.');
       }
+      // No need to navigate here as authStore will handle it
     } catch (error) {
       setError(error.message || 'Failed to reset password. Please try again.');
     }

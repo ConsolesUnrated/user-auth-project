@@ -59,25 +59,13 @@ const SecurityQuestionsPage = () => {
       // Start loading state
       setError('');
       
-      const result = await authStore.handleSecurityQuestionsVerification(securityAnswers, navigate);
+      // Call authStore method which will handle navigation internally
+      const result = await authStore.handleSecurityQuestionsVerification(securityAnswers);
       
-      if (result) {
-        if (result.locked) {
-          // Account is locked, will be redirected by the store function
-          return;
-        } else if (!result.success) {
-          // Show error and remaining attempts
-          setError(result.error || 'Verification failed. Please try again.');
-          setRemainingAttempts(result.attemptsLeft || 0);
-          
-          // If no attempts left, redirect to locked page
-          if (result.attemptsLeft === 0) {
-            setTimeout(() => {
-              navigate('/locked-out');
-            }, 1000);
-          }
-        }
-        // On success, the store function will navigate to reset password page
+      // Only handle failed attempts that aren't locked here
+      if (result && !result.success && !result.locked) {
+        setError(result.error || 'Verification failed. Please try again.');
+        setRemainingAttempts(result.attemptsLeft || 0);
       }
     } catch (error) {
       setError('An unexpected error occurred. Please try again.');

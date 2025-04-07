@@ -15,21 +15,21 @@ app.use(express.json());
 // Login endpoint
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
     
     // Get user from database
     const result = await query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
+      'SELECT * FROM users WHERE username = $1',
+      [username]
     );
     
     if (result.rows.length === 0) {
       // Log failed attempt for non-existent user
       await query(
-        'INSERT INTO login_history (email, ip_address, status, failure_reason) VALUES ($1, $2, $3, $4)',
-        [email, req.ip, 'failed', 'User not found']
+        'INSERT INTO login_history (username, ip_address, status, failure_reason, email) VALUES ($1, $2, $3, $4, $5)',
+        [username, req.ip, 'failed', 'User not found', username]
       );
-      console.log(`Login failed: ${email} - User not found`);
+      console.log(`Login failed: ${username} - User not found`);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -40,24 +40,24 @@ app.post('/api/auth/login', async (req, res) => {
     if (!validPassword) {
       // Log failed attempt for incorrect password
       await query(
-        'INSERT INTO login_history (user_id, email, ip_address, status, failure_reason) VALUES ($1, $2, $3, $4, $5)',
-        [user.id, email, req.ip, 'failed', 'Invalid password']
+        'INSERT INTO login_history (user_id, username, ip_address, status, failure_reason, email) VALUES ($1, $2, $3, $4, $5, $6)',
+        [user.id, username, req.ip, 'failed', 'Invalid password', user.email]
       );
-      console.log(`Login failed: ${email} - Invalid password`);
+      console.log(`Login failed: ${username} - Invalid password`);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, username: user.username },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
     // Record successful login
     await query(
-      'INSERT INTO login_history (user_id, email, ip_address, status) VALUES ($1, $2, $3, $4)',
-      [user.id, email, req.ip, 'success']
+      'INSERT INTO login_history (user_id, username, ip_address, status, email) VALUES ($1, $2, $3, $4, $5)',
+      [user.id, username, req.ip, 'success', user.email]
     );
 
     // Get login history

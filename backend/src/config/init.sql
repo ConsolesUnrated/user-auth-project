@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS login_history (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     email VARCHAR(255) NOT NULL,
+    username VARCHAR(50) NOT NULL,
     login_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ip_address VARCHAR(45),
     status VARCHAR(20) NOT NULL, -- 'success' or 'failed'

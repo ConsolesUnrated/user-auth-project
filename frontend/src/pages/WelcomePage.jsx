@@ -4,6 +4,13 @@ import useAuthStore from '../store/authStore';
 const WelcomePage = () => {
   const { user, logout } = useAuthStore();
 
+  // Format the last login date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleString();
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.navBar}>
@@ -16,7 +23,8 @@ const WelcomePage = () => {
         <h1 style={styles.message}>Sign In Successful!</h1>
         <div style={styles.userInfoContainer}>
           <h2 style={styles.greeting}>Hi, {user?.firstName || 'User'} {user?.lastName || ''}</h2>
-          <p style={styles.loginInfo}>Welcome to your dashboard!</p>
+          <p style={styles.loginInfo}>You have logged in {user?.loginCount || 0} times</p>
+          <p style={styles.loginInfo}>Last login date: {formatDate(user?.lastLogin)}</p>
           <button 
             style={styles.downloadButton}
           >
@@ -98,9 +106,10 @@ const styles = {
       marginBottom: '1rem',
     },
     loginInfo: {
-      fontSize: '1rem',
-      color: '#666',
+      fontSize: '1.2rem',
+      color: '#4A90E2',
       margin: '0.5rem 0',
+      fontWeight: '500',
     },
     downloadButton: {
       marginTop: '1.5rem',

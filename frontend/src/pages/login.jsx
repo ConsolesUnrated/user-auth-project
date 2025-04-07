@@ -52,7 +52,7 @@ const Login = () => {
     e.preventDefault();
     setInputErrors({});
     await loginAndRedirect({
-      email: username,
+      username: username,
       password: password
     });
   };

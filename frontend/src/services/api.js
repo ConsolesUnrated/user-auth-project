@@ -31,7 +31,10 @@ export const authAPI = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(credentials),
+      body: JSON.stringify({
+        username: credentials.username,
+        password: credentials.password
+      }),
     });
     return handleResponse(response);
   },

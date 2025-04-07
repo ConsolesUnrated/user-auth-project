@@ -230,23 +230,27 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await authAPI.requestPasswordReset(email);
-      if (!response || !response.success) {
-        throw new Error('Failed to initiate password recovery');
+      
+      // Store the recovery email only if it exists
+      if (response && response.success && response.emailExists) {
+        localStorage.setItem('recoveryEmail', email);
+        set({ 
+          passwordRecoveryInProgress: true,
+          currentStep: 'recovery_started',
+          error: null,
+          isLoading: false
+        });
+      } else {
+        set({ isLoading: false });
       }
-      // Store the recovery email
-      localStorage.setItem('recoveryEmail', email);
-      set({ 
-        passwordRecoveryInProgress: true,
-        currentStep: 'recovery_started',
-        error: null,
-        isLoading: false
-      });
+      
+      return response;
     } catch (error) {
       set({ 
         error: error.message || 'Failed to initiate password recovery',
         isLoading: false
       });
-      throw error;
+      return { success: false, error: error.message };
     }
   },
 
@@ -267,25 +271,43 @@ const useAuthStore = create((set, get) => ({
       const response = await authAPI.verifySecurityQuestions(answers);
       
       if (response.success) {
-        navigate('/reset-password');
+        // Set security verified state
+        set({ 
+          securityVerified: true,
+          isLoading: false
+        });
+        
+        // Only navigate if navigate function is provided
+        if (navigate) {
+          navigate('/reset-password');
+        }
+        
         return { success: true };
       } else if (response.attemptsLeft === 0) {
-        navigate('/locked-out');
+        // Account is locked
+        set({ isLoading: false });
+        
+        // Only navigate if navigate function is provided
+        if (navigate) {
+          navigate('/locked-out');
+        }
+        
         return { success: false, locked: true };
       } else {
+        // Return attempts info
+        set({ isLoading: false });
         return { 
           success: false, 
-          error: `Verification failed ${response.attemptsLeft} attempts remaining.`,
+          error: `Verification failed. ${response.attemptsLeft} ${response.attemptsLeft === 1 ? 'attempt' : 'attempts'} remaining.`,
           attemptsLeft: response.attemptsLeft 
         };
       }
     } catch (error) {
+      set({ isLoading: false });
       return { 
         success: false, 
-        error: 'An unexpected error occurred. Please try again.' 
+        error: error.message || 'An unexpected error occurred. Please try again.' 
       };
-    } finally {
-      set({ isLoading: false });
     }
   },
 
@@ -307,6 +329,22 @@ const useAuthStore = create((set, get) => ({
         error: error.message || 'Failed to verify recovery email',
         isLoading: false
       });
+    }
+  },
+
+  // Add method to check if account is locked for security questions
+  checkLockoutStatus: async () => {
+    try {
+      const email = localStorage.getItem('recoveryEmail');
+      if (!email) {
+        return { locked: false, error: 'No recovery email found' };
+      }
+      
+      const response = await authAPI.checkAccountLockout(email);
+      return response;
+    } catch (error) {
+      console.error('Failed to check account lockout status:', error);
+      return { locked: false, error: error.message };
     }
   },
 

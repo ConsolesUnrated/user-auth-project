@@ -277,6 +277,7 @@ app.post('/api/auth/request-password-reset', async (req, res) => {
       // Return success anyway for security (don't reveal if user exists)
       return res.json({
         success: true,
+        emailExists: false,
         message: 'If your email is registered, you will receive reset instructions'
       });
     }
@@ -293,6 +294,7 @@ app.post('/api/auth/request-password-reset', async (req, res) => {
     
     res.json({
       success: true,
+      emailExists: true,
       message: 'If your email is registered, you will receive reset instructions'
     });
   } catch (error) {

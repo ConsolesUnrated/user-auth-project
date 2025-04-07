@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 
@@ -9,6 +9,29 @@ const SecurityQuestionsPage = () => {
   const [error, setError] = useState('');
   const [remainingAttempts, setRemainingAttempts] = useState(null);
   const authStore = useAuthStore();
+
+  // Check if account is locked on component mount
+  useEffect(() => {
+    const checkLockStatus = async () => {
+      try {
+        const email = localStorage.getItem('recoveryEmail');
+        if (!email) {
+          navigate('/send-reset-link');
+          return;
+        }
+
+        const lockStatus = await authStore.checkLockoutStatus();
+        if (lockStatus && lockStatus.locked) {
+          navigate('/locked-out');
+        }
+      } catch (error) {
+        console.error('Failed to check lock status:', error);
+        setError('Failed to check account status. Please try again.');
+      }
+    };
+
+    checkLockStatus();
+  }, [navigate, authStore]);
 
   const handleQuestionChange = (index, questionId) => {
     const newSelectedQuestions = [...selectedQuestions];
@@ -24,6 +47,7 @@ const SecurityQuestionsPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
     // Construct securityAnswers array from state
     const securityAnswers = selectedQuestions.map((questionId, index) => ({
@@ -32,9 +56,28 @@ const SecurityQuestionsPage = () => {
     }));
     
     try {
+      // Start loading state
+      setError('');
+      
       const result = await authStore.handleSecurityQuestionsVerification(securityAnswers, navigate);
-      if (!result.success && !result.locked) {
-        setError(result.error);
+      
+      if (result) {
+        if (result.locked) {
+          // Account is locked, will be redirected by the store function
+          return;
+        } else if (!result.success) {
+          // Show error and remaining attempts
+          setError(result.error || 'Verification failed. Please try again.');
+          setRemainingAttempts(result.attemptsLeft || 0);
+          
+          // If no attempts left, redirect to locked page
+          if (result.attemptsLeft === 0) {
+            setTimeout(() => {
+              navigate('/locked-out');
+            }, 1000);
+          }
+        }
+        // On success, the store function will navigate to reset password page
       }
     } catch (error) {
       setError('An unexpected error occurred. Please try again.');
@@ -76,6 +119,11 @@ const SecurityQuestionsPage = () => {
             </div>
           ))}
           {error && <p style={styles.error}>{error}</p>}
+          {remainingAttempts !== null && !error && (
+            <p style={styles.attempts}>
+              You have {remainingAttempts} verification {remainingAttempts === 1 ? 'attempt' : 'attempts'} remaining.
+            </p>
+          )}
           <button style={styles.button}>
             Submit
           </button>

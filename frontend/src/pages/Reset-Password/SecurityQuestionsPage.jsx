@@ -32,20 +32,11 @@ const SecurityQuestionsPage = () => {
     }));
     
     try {
-      const response = await authStore.verifySecurity(securityAnswers);
-      
-      if (response.success) {
-        navigate('/reset-password');
-      } else if (response.attemptsLeft === 0) {
-        navigate('/locked-out');
-      } else if (response.attemptsLeft !== undefined) {
-        setError(`Verification failed. ${response.attemptsLeft} attempts remaining.`);
-        setRemainingAttempts(response.attemptsLeft);
-      } else {
-        setError('Verification failed. Please try again.');
+      const result = await authStore.handleSecurityQuestionsVerification(securityAnswers, navigate);
+      if (!result.success && !result.locked) {
+        setError(result.error);
       }
     } catch (error) {
-      // Generic error handling
       setError('An unexpected error occurred. Please try again.');
     }
   };
@@ -85,11 +76,6 @@ const SecurityQuestionsPage = () => {
             </div>
           ))}
           {error && <p style={styles.error}>{error}</p>}
-          {remainingAttempts !== null && (
-            <p style={styles.attempts}>
-              Remaining attempts: {remainingAttempts}
-            </p>
-          )}
           <button style={styles.button}>
             Submit
           </button>

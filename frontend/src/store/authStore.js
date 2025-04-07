@@ -260,6 +260,35 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
+  // Add new method for handling security questions verification flow
+  handleSecurityQuestionsVerification: async (answers, navigate) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await authAPI.verifySecurityQuestions(answers);
+      
+      if (response.success) {
+        navigate('/reset-password');
+        return { success: true };
+      } else if (response.attemptsLeft === 0) {
+        navigate('/locked-out');
+        return { success: false, locked: true };
+      } else {
+        return { 
+          success: false, 
+          error: `Verification failed ${response.attemptsLeft} attempts remaining.`,
+          attemptsLeft: response.attemptsLeft 
+        };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: 'An unexpected error occurred. Please try again.' 
+      };
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
   verifyRecoveryEmail: async (token) => {
     set({ isLoading: true, error: null });
     try {

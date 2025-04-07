@@ -12,11 +12,10 @@ const SendResetLinkPage = () => {
     e.preventDefault();
     try {
       await authStore.startPasswordRecovery(email);
-      setMessage('If this account exists, you will receive instructions on how to reset your password via email.');
-      // Navigate to security questions page
+      // Only navigate if the API call was successful
       navigate('/security-questions');
     } catch (error) {
-      // Still show the same message for security reasons
+      // Show the same message regardless of success/failure for security
       setMessage('If this account exists, you will receive instructions on how to reset your password via email.');
     }
   };

@@ -12,6 +12,23 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Function to schedule resetting of security question attempts after 3 minutes
+const scheduleSecurityQuestionsReset = async (userId) => {
+  console.log(`Scheduling reset of security question attempts for user ID: ${userId}`);
+  setTimeout(async () => {
+    try {
+      // Reset the lock and attempts count after 3 minutes
+      await query(
+        'UPDATE users SET is_security_questions_locked = FALSE, remaining_security_question_attempts = 3 WHERE id = $1',
+        [userId]
+      );
+      console.log(`Successfully reset security question attempts for user ID: ${userId}`);
+    } catch (error) {
+      console.error(`Failed to reset security question attempts for user ID: ${userId}`, error);
+    }
+  }, 3 * 60 * 1000); // 3 minutes in milliseconds
+};
+
 // Login endpoint
 app.post('/api/auth/login', async (req, res) => {
   try {
@@ -289,23 +306,34 @@ app.post('/api/auth/security-questions-reset', async (req, res) => {
   try {
     const { email, securityAnswers } = req.body;
     
-    // Check for recent failed attempts
-    const recentAttempts = await query(
-      `SELECT COUNT(*) as failed_attempts 
-       FROM password_reset_attempts 
-       WHERE email = $1 
-       AND status = 'failed' 
-       AND attempt_timestamp > NOW() - INTERVAL '3 minutes'`,
+    // First, check if the user exists and get their lockout status
+    const userResult = await query(
+      'SELECT id, is_security_questions_locked, remaining_security_question_attempts FROM users WHERE email = $1',
       [email]
     );
-
-    const failedAttempts = parseInt(recentAttempts.rows[0].failed_attempts);
     
-    if (failedAttempts >= 3) {
-      // Log the locked out attempt
+    if (userResult.rows.length === 0) {
+      // Log failed attempt on server side only
+      console.log(`Security questions attempted for nonexistent email: ${email}`);
       await query(
         'INSERT INTO password_reset_attempts (email, status, failure_reason) VALUES ($1, $2, $3)',
-        [email, 'failed', 'Account locked due to too many failed attempts']
+        [email, 'failed', 'User not found']
+      );
+      
+      // Return generic response (don't reveal user doesn't exist)
+      return res.status(200).json({ 
+        success: false,
+        attemptsLeft: 2
+      });
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Check if account is already locked
+    if (user.is_security_questions_locked) {
+      await query(
+        'INSERT INTO password_reset_attempts (user_id, email, status, failure_reason) VALUES ($1, $2, $3, $4)',
+        [user.id, email, 'failed', 'Account locked due to too many failed attempts']
       );
       
       return res.status(429).json({ 
@@ -316,24 +344,22 @@ app.post('/api/auth/security-questions-reset', async (req, res) => {
     
     // Get user's security questions
     const result = await query(
-      `SELECT sq.*, u.id as user_id FROM security_questions sq 
-       JOIN users u ON sq.user_id = u.id 
-       WHERE u.email = $1`,
-      [email]
+      `SELECT sq.* FROM security_questions sq 
+       WHERE sq.user_id = $1`,
+      [user.id]
     );
     
     if (result.rows.length === 0) {
       // Log failed attempt on server side only
-      console.log(`Security questions attempted for nonexistent email: ${email}`);
+      console.log(`Security questions not found for user: ${email}`);
       await query(
-        'INSERT INTO password_reset_attempts (email, status, failure_reason) VALUES ($1, $2, $3)',
-        [email, 'failed', 'Security questions not found']
+        'INSERT INTO password_reset_attempts (user_id, email, status, failure_reason) VALUES ($1, $2, $3, $4)',
+        [user.id, email, 'failed', 'Security questions not found']
       );
       
-      // Return generic response (don't reveal user doesn't exist)
       return res.status(200).json({ 
         success: false,
-        attemptsLeft: 2 - failedAttempts
+        attemptsLeft: user.remaining_security_question_attempts - 1
       });
     }
     
@@ -355,24 +381,51 @@ app.post('/api/auth/security-questions-reset', async (req, res) => {
     
     // Require at least 2 correct answers
     if (correctAnswers < 2) {
-      // Log failed attempt with sensitive information only on server
-      console.log(`Security verification failed for email: ${email}`);
+      // Decrement the attempts counter
+      const remainingAttempts = Math.max(0, user.remaining_security_question_attempts - 1);
+      let isLocked = false;
+      
+      if (remainingAttempts === 0) {
+        isLocked = true;
+        // Schedule reset after 3 minutes
+        scheduleSecurityQuestionsReset(user.id);
+      }
+      
+      // Update the user's attempts counter and lock status
       await query(
-        'INSERT INTO password_reset_attempts (user_id, email, status, failure_reason) VALUES ($1, $2, $3, $4)',
-        [questions.user_id, email, 'failed', 'Incorrect security answers']
+        'UPDATE users SET remaining_security_question_attempts = $1, is_security_questions_locked = $2 WHERE id = $3',
+        [remainingAttempts, isLocked, user.id]
       );
       
-      const attemptsLeft = 2 - failedAttempts;
-      return res.status(200).json({ 
-        success: false,
-        attemptsLeft
-      });
+      // Log failed attempt
+      await query(
+        'INSERT INTO password_reset_attempts (user_id, email, status, failure_reason) VALUES ($1, $2, $3, $4)',
+        [user.id, email, 'failed', 'Incorrect security answers']
+      );
+      
+      if (isLocked) {
+        return res.status(429).json({ 
+          locked: true,
+          remainingTime: 180 // 3 minutes in seconds
+        });
+      } else {
+        return res.status(200).json({ 
+          success: false,
+          attemptsLeft: remainingAttempts
+        });
+      }
     }
 
+    // Reset the attempts counter on successful verification
+    await query(
+      'UPDATE users SET remaining_security_question_attempts = 3, is_security_questions_locked = FALSE WHERE id = $1',
+      [user.id]
+    );
+    
     // Log successful attempt
     await query(
       'INSERT INTO password_reset_attempts (user_id, email, status) VALUES ($1, $2, $3)',
-      [questions.user_id, email, 'success']
+      [user.id, email, 'success']
     );
 
     logDatabaseOperation('Security Questions Verified', { email });
@@ -444,32 +497,24 @@ app.post('/api/auth/check-lockout', async (req, res) => {
   try {
     const { email } = req.body;
     
-    // Check for recent failed attempts
-    const recentAttempts = await query(
-      `SELECT 
-        COUNT(*) as failed_attempts,
-        MAX(attempt_timestamp) as last_attempt
-       FROM password_reset_attempts 
-       WHERE email = $1 
-       AND status = 'failed' 
-       AND attempt_timestamp > NOW() - INTERVAL '3 minutes'`,
+    // Check user's lockout status directly from users table
+    const userResult = await query(
+      'SELECT id, is_security_questions_locked FROM users WHERE email = $1',
       [email]
     );
-
-    const failedAttempts = parseInt(recentAttempts.rows[0].failed_attempts);
-    const lastAttempt = recentAttempts.rows[0].last_attempt;
     
-    if (failedAttempts >= 3 && lastAttempt) {
-      const lockoutEndTime = new Date(lastAttempt);
-      lockoutEndTime.setMinutes(lockoutEndTime.getMinutes() + 3); // 3 minutes lockout
-      const remainingTime = Math.ceil((lockoutEndTime - new Date()) / 1000);
-      
-      if (remainingTime > 0) {
-        return res.json({ 
-          locked: true,
-          remainingTime
-        });
-      }
+    if (userResult.rows.length === 0) {
+      // Don't reveal that the user doesn't exist
+      return res.json({ locked: false });
+    }
+    
+    const user = userResult.rows[0];
+    
+    if (user.is_security_questions_locked) {
+      return res.json({ 
+        locked: true,
+        remainingTime: 180 // 3 minutes in seconds
+      });
     }
     
     res.json({ locked: false });

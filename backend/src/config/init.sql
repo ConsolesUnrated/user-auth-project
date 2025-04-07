@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(100) NOT NULL,
     birthday DATE NOT NULL,
     is_email_verified BOOLEAN DEFAULT FALSE,
+    is_security_questions_locked BOOLEAN DEFAULT FALSE,
+    remaining_security_question_attempts INTEGER DEFAULT 3,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

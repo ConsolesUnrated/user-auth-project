@@ -1,8 +1,33 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import useAuthStore from '../../store/authStore';
 
 const ConfirmEmailPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { verifySignupEmail, isLoading, error } = useAuthStore();
+  
+  useEffect(() => {
+    const verifyEmail = async () => {
+      const token = new URLSearchParams(location.search).get('token');
+      if (token) {
+        try {
+          await verifySignupEmail(token);
+          // Redirect to login with verification status
+          navigate('/?emailVerified=true');
+        } catch (error) {
+          // Redirect to login with error status
+          navigate('/?emailVerified=false');
+        }
+      }
+    };
+
+    verifyEmail();
+  }, [location, navigate, verifySignupEmail]);
+
+  const handleReturnToLogin = () => {
+    navigate('/');
+  };
 
   return (
     <div style={styles.container}>
@@ -18,11 +43,11 @@ const ConfirmEmailPage = () => {
           Please check your inbox and spam/junk folders to verify your account.
         </p>
         <p style={styles.redirectInfo}>
-          After confirming your email, you will be automatically redirected and signed in.
+          After confirming your email, you will be automatically redirected to the login page.
         </p>
         <button 
           style={styles.button}
-          onClick={() => navigate('/confirmation')}
+          onClick={handleReturnToLogin}
         >
           Return to Login
         </button>

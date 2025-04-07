@@ -1,13 +1,24 @@
-import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../../store/authStore';
 
 const SendResetLinkPage = () => {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const authStore = useAuthStore();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // For now, just navigate to home or dashboard
-    navigate('/security-questions');
+    try {
+      await authStore.startPasswordRecovery(email);
+      setMessage('If this account exists, you will receive instructions on how to reset your password via email.');
+      // Navigate to security questions page
+      navigate('/security-questions');
+    } catch (error) {
+      // Still show the same message for security reasons
+      setMessage('If this account exists, you will receive instructions on how to reset your password via email.');
+    }
   };
 
   return (
@@ -19,15 +30,19 @@ const SendResetLinkPage = () => {
             Enter your e-mail address, and we'll give you reset instructions.
           </p>
           <input
-            type="text"
+            type="email"
             placeholder="Enter your email"
             style={styles.input}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
+          {message && <p style={styles.message}>{message}</p>}
           <button style={styles.button}>
             Request Password Reset
           </button>
-          <p style={styles.loginText}>
-            Back to <Link to="/login" style={styles.loginLink}>Login</Link>.
+          <p onClick={() => navigate('/login')} style={{...styles.loginText, cursor: 'pointer', color: '#007bff'}}>
+            Back to Login
           </p>
         </form>
       </div>
@@ -89,6 +104,7 @@ const styles = {
     cursor: 'pointer',
     transition: 'background-color 0.2s ease',
     marginTop: '0.5rem',
+    width: '100%',
     ':hover': {
       backgroundColor: '#357ABD',
     },
@@ -113,7 +129,12 @@ const styles = {
     textDecoration: 'none',
     cursor: 'pointer',
   },
-
+  message: {
+    color: '#4A90E2',
+    textAlign: 'center',
+    marginTop: '1rem',
+    fontSize: '0.9rem',
+  },
 };
 
 export default SendResetLinkPage;

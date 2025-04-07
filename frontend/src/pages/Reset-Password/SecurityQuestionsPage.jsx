@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../../store/authStore';
 
 const SecurityQuestionsPage = () => {
   const navigate = useNavigate();
   const [selectedQuestions, setSelectedQuestions] = useState(['', '', '']);
+  const [answers, setAnswers] = useState(['', '', '']);
+  const [error, setError] = useState('');
+  const [remainingAttempts, setRemainingAttempts] = useState(null);
+  const authStore = useAuthStore();
 
   const handleQuestionChange = (index, questionId) => {
     const newSelectedQuestions = [...selectedQuestions];
@@ -11,9 +16,38 @@ const SecurityQuestionsPage = () => {
     setSelectedQuestions(newSelectedQuestions);
   };
 
-  const handleSubmit = (e) => {
+  const handleAnswerChange = (index, answer) => {
+    const newAnswers = [...answers];
+    newAnswers[index] = answer;
+    setAnswers(newAnswers);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/reset-password');  // Navigate to reset password page after verification
+    
+    // Construct securityAnswers array from state
+    const securityAnswers = selectedQuestions.map((questionId, index) => ({
+      questionId,
+      answer: answers[index]
+    }));
+    
+    try {
+      const response = await authStore.verifySecurity(securityAnswers);
+      
+      if (response.success) {
+        navigate('/reset-password');
+      } else if (response.attemptsLeft === 0) {
+        navigate('/locked-out');
+      } else if (response.attemptsLeft !== undefined) {
+        setError(`Verification failed. ${response.attemptsLeft} attempts remaining.`);
+        setRemainingAttempts(response.attemptsLeft);
+      } else {
+        setError('Verification failed. Please try again.');
+      }
+    } catch (error) {
+      // Generic error handling
+      setError('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (
@@ -27,6 +61,7 @@ const SecurityQuestionsPage = () => {
                 value={selectedQuestions[index]}
                 onChange={(e) => handleQuestionChange(index, e.target.value)}
                 style={styles.select}
+                required
               >
                 <option value="">Select a security question</option>
                 {securityQuestions.map((q) => (
@@ -43,9 +78,18 @@ const SecurityQuestionsPage = () => {
                 type="text"
                 placeholder="Your answer"
                 style={styles.input}
+                value={answers[index]}
+                onChange={(e) => handleAnswerChange(index, e.target.value)}
+                required
               />
             </div>
           ))}
+          {error && <p style={styles.error}>{error}</p>}
+          {remainingAttempts !== null && (
+            <p style={styles.attempts}>
+              Remaining attempts: {remainingAttempts}
+            </p>
+          )}
           <button style={styles.button}>
             Submit
           </button>
@@ -155,6 +199,24 @@ const styles = {
       borderColor: '#4A90E2',
       boxShadow: '0 0 0 3px rgba(74, 144, 226, 0.1)',
     },
+  },
+  error: {
+    color: '#dc3545',
+    textAlign: 'center',
+    marginTop: '1rem',
+    fontSize: '0.9rem',
+  },
+  message: {
+    fontSize: '1.2rem',
+    color: '#666',
+    marginBottom: '1rem',
+    textAlign: 'center',
+  },
+  attempts: {
+    color: '#666',
+    fontSize: '0.9rem',
+    textAlign: 'center',
+    marginTop: '0.5rem',
   },
 };
 

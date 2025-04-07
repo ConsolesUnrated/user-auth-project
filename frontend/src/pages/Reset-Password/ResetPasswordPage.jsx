@@ -1,22 +1,53 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { passwordRequirements } from '../../utils/validation';
+import useAuthStore from '../../store/authStore';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
+  const authStore = useAuthStore();
   const [showPasswords, setShowPasswords] = useState(false);
-  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    password: '',
+    confirmPassword: ''
+  });
   
-  const passwordValidation = {
-    length: password.length >= 12,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    number: /[0-9]/.test(password),
-    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  const passwordValidation = Object.keys(passwordRequirements).reduce((acc, key) => ({
+    ...acc,
+    [key]: key === 'match' 
+      ? passwordRequirements[key](formData.password, formData.confirmPassword)
+      : passwordRequirements[key](formData.password)
+  }), {});
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    // Check if all password requirements are met
+    if (!Object.values(passwordValidation).every(Boolean)) {
+      setError('Please meet all password requirements');
+      return;
+    }
+
+    try {
+      const success = await authStore.resetPassword(formData.password);
+      if (success) {
+        navigate('/login');
+      } else {
+        setError('Failed to reset password. Please try again.');
+      }
+    } catch (error) {
+      setError(error.message || 'Failed to reset password. Please try again.');
+    }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    navigate('/login');  // Navigate to login after password reset
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleShowPassword = (e) => {
@@ -35,10 +66,11 @@ const ResetPasswordPage = () => {
         <form style={styles.form} onSubmit={handleSubmit}>
           <input
             type={showPasswords ? "text" : "password"}
+            name="password"
             placeholder="New Password"
             style={styles.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={formData.password}
+            onChange={handleChange}
           />
           <div style={styles.requirementsList}>
             <div style={styles.requirementsGrid}>
@@ -48,6 +80,7 @@ const ResetPasswordPage = () => {
                 'Lowercase': 'lowercase',
                 'Number': 'number',
                 'Special Character': 'special',
+                'Passwords Match': 'match',
               }).map(([text, key]) => (
                 <div key={key} style={styles.requirementItem}>
                   <span style={{
@@ -69,8 +102,11 @@ const ResetPasswordPage = () => {
           </div>
           <input
             type={showPasswords ? "text" : "password"}
+            name="confirmPassword"
             placeholder="Confirm New Password"
             style={styles.input}
+            value={formData.confirmPassword}
+            onChange={handleChange}
           />
           <button
             type="button"
@@ -81,7 +117,8 @@ const ResetPasswordPage = () => {
           >
             show password
           </button>
-          <button style={styles.button}>
+          {error && <p style={styles.error}>{error}</p>}
+          <button style={styles.button} type="submit">
             Reset Password
           </button>
         </form>
@@ -183,6 +220,12 @@ const styles = {
     marginBottom: '-0.5rem',
     alignSelf: 'flex-end',
     marginLeft: '0.5rem',
+  },
+  error: {
+    color: 'red',
+    fontSize: '0.9rem',
+    marginTop: '0.5rem',
+    marginBottom: '1rem',
   },
 };
 

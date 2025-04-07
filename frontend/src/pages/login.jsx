@@ -1,57 +1,138 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import useAuthStore from '../store/authStore';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Login = () => {
-  const navigate = useNavigate();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [inputErrors, setInputErrors] = useState({});
+  const { loginAndRedirect, isLoading, error } = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const emailVerified = params.get('emailVerified');
+    
+    if (emailVerified === 'true') {
+      window.dispatchEvent(new CustomEvent('showToast', {
+        detail: {
+          message: 'Thank you! Your email has been successfully confirmed. Please login.',
+          type: 'success'
+        }
+      }));
+      // Clean up the URL
+      navigate('/', { replace: true });
+    } else if (emailVerified === 'false') {
+      window.dispatchEvent(new CustomEvent('showToast', {
+        detail: {
+          message: 'Failed to verify email. Please try again.',
+          type: 'error'
+        }
+      }));
+      // Clean up the URL
+      navigate('/', { replace: true });
+    }
+  }, [location, navigate]);
+
+  useEffect(() => {
+    if (error) {
+      // Show a generic error message for all authentication failures
+      setInputErrors({
+        username: '',
+        password: 'Invalid credentials. Please try again.'
+      });
+    } else {
+      setInputErrors({});
+    }
+  }, [error]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // For now, just navigate to home or dashboard
-    navigate('/confirmation');
+    setInputErrors({});
+    await loginAndRedirect({
+      username: username,
+      password: password
+    });
   };
 
-  const handleShowPassword = (e) => {
-    e.preventDefault();
-    setShowPassword(true);
+  const handleForgotPassword = () => {
+    navigate('/send-reset-link');
   };
 
-  const handleHidePassword = () => {
-    setShowPassword(false);
+  const handleSignup = () => {
+    navigate('/signup');
   };
+
+  const getInputStyle = (field) => ({
+    ...styles.input,
+    ...(inputErrors[field] ? styles.inputError : {})
+  });
 
   return (
     <div style={styles.container}>
       <div style={styles.formWrapper}>
         <h1 style={styles.title}>Login</h1>
         <form style={styles.form} onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Username"
-            style={styles.input}
-          />
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            style={styles.input}
-          />
+          <div style={styles.inputWrapper}>
+            <input
+              type="text"
+              placeholder="Username"
+              style={getInputStyle('username')}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading}
+            />
+            {inputErrors.username && <div style={styles.fieldError}>{inputErrors.username}</div>}
+          </div>
+          <div style={styles.inputWrapper}>
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              style={getInputStyle('password')}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+            />
+            {inputErrors.password && <div style={styles.fieldError}>{inputErrors.password}</div>}
+          </div>
           <div style={styles.passwordActionsContainer}>
             <button
               type="button"
               style={styles.showPasswordButton}
-              onMouseDown={handleShowPassword}
-              onMouseUp={handleHidePassword}
-              onMouseLeave={handleHidePassword}
+              onMouseDown={() => setShowPassword(true)}
+              onMouseUp={() => setShowPassword(false)}
+              onMouseLeave={() => setShowPassword(false)}
             >
               show password
             </button>
-            <Link to="/sendresetlinkpage" style={styles.loginLink}>Forgot Password?</Link>
+            <span 
+              style={styles.loginLink}
+              onClick={handleForgotPassword}
+              role="button"
+              tabIndex={0}
+            >
+              Forgot Password?
+            </span>
           </div>
-          <button style={styles.button}>
-            Login
+          <button 
+            type="submit" 
+            style={styles.button}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Logging in...' : 'Login'}
           </button>
           <p style={styles.signupText}>
-            Don't have an account? <Link to="/signup" style={styles.signupLink}>Sign up</Link>
+            Don't have an account? {' '}
+            <span 
+              style={styles.signupLink}
+              onClick={handleSignup}
+              role="button"
+              tabIndex={0}
+            >
+              Sign up
+            </span>
           </p>
         </form>
       </div>
@@ -92,6 +173,10 @@ const styles = {
     width: '100%',
     gap: '1rem',
   },
+  inputWrapper: {
+    width: '100%',
+    marginBottom: '0.5rem',
+  },
   input: {
     padding: '1rem',
     borderRadius: '4px',
@@ -99,9 +184,18 @@ const styles = {
     fontSize: '1rem',
     transition: 'border-color 0.2s ease',
     outline: 'none',
-    ':focus': {
-      borderColor: '#4A90E2',
-    },
+    width: '100%',
+    boxSizing: 'border-box',
+  },
+  inputError: {
+    borderColor: '#ff3333',
+    backgroundColor: '#fff8f8',
+  },
+  fieldError: {
+    color: '#ff3333',
+    fontSize: '0.8rem',
+    marginTop: '0.25rem',
+    marginLeft: '0.25rem',
   },
   button: {
     padding: '1rem',
@@ -112,9 +206,7 @@ const styles = {
     fontSize: '1rem',
     cursor: 'pointer',
     transition: 'background-color 0.2s ease',
-    ':hover': {
-      backgroundColor: '#357ABD',
-    },
+    width: '100%',
   },
   signupText: {
     marginTop: '1rem',
@@ -132,10 +224,6 @@ const styles = {
     alignItems: 'center',
     width: '100%',
   },
-  loginText: {
-    textAlign: 'right',
-    color: '#333',
-  },
   loginLink: {
     color: '#007bff',
     textDecoration: 'none',
@@ -150,6 +238,15 @@ const styles = {
     padding: '0',
     textAlign: 'left',
   },
+  errorMessage: {
+    color: '#ff3333',
+    marginBottom: '1rem',
+    textAlign: 'center',
+    backgroundColor: '#fff8f8',
+    padding: '0.5rem',
+    borderRadius: '4px',
+    border: '1px solid #ff3333',
+  }
 };
 
 export default Login;

@@ -17,7 +17,8 @@ const RouteGuard = ({
     signupEmailVerified,
     passwordRecoveryInProgress,
     securityVerified,
-    recoveryEmailVerified
+    recoveryEmailVerified,
+    account_locked
   } = useAuthStore();
 
   // Helper function to check flow state
@@ -30,7 +31,8 @@ const RouteGuard = ({
       signupEmailVerified,
       passwordRecoveryInProgress,
       securityVerified,
-      recoveryEmailVerified
+      recoveryEmailVerified,
+      account_locked
     };
 
     if (requiredFlowState) {

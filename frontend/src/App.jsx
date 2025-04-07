@@ -9,6 +9,7 @@ import WelcomePage from './pages/WelcomePage';
 import Signup from './pages/Sign-up/Signup';
 import Login from './pages/Login';
 import SendResetLinkPage from './pages/Reset-Password/SendResetLinkPage';
+import LockedOutPage from './pages/Reset-Password/LockedOutPage';
 
 // Sign up flow:
 import ConfirmEmail from './pages/Sign-up/ConfirmEmailPage';
@@ -17,7 +18,6 @@ import SecurityQuestionsPageSignup from './pages/Sign-up/SecurityQuestionsPageSi
 // Reset Password flow:
 import SecurityQuestions from './pages/Reset-Password/SecurityQuestionsPage';
 import ResetPassword from './pages/Reset-Password/ResetPasswordPage';
-import LockedOutPage from './pages/Reset-Password/LockedOutPage';
 
 // Auth Provider
 import { AuthProvider } from './context/AuthContext';
@@ -69,6 +69,7 @@ const AppContent = () => {
             <SendResetLinkPage />
           </RouteGuard>
         } />
+        <Route path="/locked-out" element={<LockedOutPage />} />
 
         {/* Protected Routes */}
         <Route path="/welcome" element={
@@ -114,17 +115,6 @@ const AppContent = () => {
             redirectTo="/security-questions"
           >
             <ResetPassword />
-          </RouteGuard>
-        } />
-
-        {/* Account Locked Route */}
-        <Route path="/account-locked" element={
-          <RouteGuard 
-            requiredFlowState="account_locked"
-            requiredStep="account_locked"
-            redirectTo="/"
-          >
-            <LockedOutPage />
           </RouteGuard>
         } />
 

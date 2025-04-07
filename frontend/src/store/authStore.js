@@ -32,6 +32,7 @@ const useAuthStore = create((set, get) => ({
   currentStep: loadState()?.currentStep || null,
   isLoading: false,
   error: null,
+  account_locked: loadState()?.account_locked || false,
 
   // Signup flow states
   signupInProgress: loadState()?.signupInProgress || false,
@@ -232,6 +233,8 @@ const useAuthStore = create((set, get) => ({
       if (!response || !response.success) {
         throw new Error('Failed to initiate password recovery');
       }
+      // Store the recovery email
+      localStorage.setItem('recoveryEmail', email);
       set({ 
         passwordRecoveryInProgress: true,
         currentStep: 'recovery_started',
@@ -243,27 +246,17 @@ const useAuthStore = create((set, get) => ({
         error: error.message || 'Failed to initiate password recovery',
         isLoading: false
       });
+      throw error;
     }
   },
 
   verifySecurity: async (answers) => {
-    set({ isLoading: true, error: null });
     try {
-      const response = await authAPI.submitSecurityQuestionsReset(answers);
-      if (!response || !response.success) {
-        throw new Error('Failed to verify security questions');
-      }
-      set({ 
-        securityVerified: true,
-        currentStep: 'security_verified',
-        error: null,
-        isLoading: false
-      });
+      const response = await authAPI.verifySecurityQuestions(answers);
+      return response;
     } catch (error) {
-      set({ 
-        error: error.message || 'Failed to verify security questions',
-        isLoading: false
-      });
+      // Return the error response without throwing
+      return error.response?.data || { success: false, attemptsLeft: 0 };
     }
   },
 

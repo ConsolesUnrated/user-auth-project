@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { passwordRequirements } from '../../utils/validation';
+import useAuthStore from '../../store/authStore';
 
 const ResetPasswordPage = () => {
+  const navigate = useNavigate();
+  const authStore = useAuthStore();
   const [showPasswords, setShowPasswords] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
@@ -15,9 +20,26 @@ const ResetPasswordPage = () => {
       : passwordRequirements[key](formData.password)
   }), {});
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle password reset logic here
+    setError('');
+
+    // Check if all password requirements are met
+    if (!Object.values(passwordValidation).every(Boolean)) {
+      setError('Please meet all password requirements');
+      return;
+    }
+
+    try {
+      const success = await authStore.resetPassword(formData.password);
+      if (success) {
+        navigate('/login');
+      } else {
+        setError('Failed to reset password. Please try again.');
+      }
+    } catch (error) {
+      setError(error.message || 'Failed to reset password. Please try again.');
+    }
   };
 
   const handleChange = (e) => {
@@ -95,7 +117,8 @@ const ResetPasswordPage = () => {
           >
             show password
           </button>
-          <button style={styles.button}>
+          {error && <p style={styles.error}>{error}</p>}
+          <button style={styles.button} type="submit">
             Reset Password
           </button>
         </form>
@@ -197,6 +220,12 @@ const styles = {
     marginBottom: '-0.5rem',
     alignSelf: 'flex-end',
     marginLeft: '0.5rem',
+  },
+  error: {
+    color: 'red',
+    fontSize: '0.9rem',
+    marginTop: '0.5rem',
+    marginBottom: '1rem',
   },
 };
 

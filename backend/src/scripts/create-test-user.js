@@ -31,17 +31,14 @@ async function createTestUser() {
     console.log('Birthday:', user.birthday);
     console.log('User ID:', user.id);
 
-    // Insert security questions
+    // Insert security questions with IDs
     await query(
-      'INSERT INTO security_questions (user_id, question1, answer1, question2, answer2, question3, answer3) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      'INSERT INTO security_questions (user_id, question1_id, answer1, question2_id, answer2, question3_id, answer3) VALUES ($1, $2, $3, $4, $5, $6, $7)',
       [
         user.id,
-        'What is your favorite color?',
-        'blue',
-        'What is your pet\'s name?',
-        'spot',
-        'What city were you born in?',
-        'london'
+        'pet', 'spot',
+        'city', 'london',
+        'friend', 'john'
       ]
     );
 

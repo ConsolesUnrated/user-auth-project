@@ -56,4 +56,43 @@ const validateSignup = (req, res, next) => {
   next();
 };
 
-module.exports = { validateSignup }; 
+const validateSecurityQuestions = (req, res, next) => {
+  const { 
+    userId,
+    question1,
+    answer1,
+    question2,
+    answer2,
+    question3,
+    answer3
+  } = req.body;
+
+  // Check if all required fields are present
+  if (!userId || !question1 || !answer1 || !question2 || !answer2 || !question3 || !answer3) {
+    return res.status(400).json({ error: 'All security questions and answers are required' });
+  }
+
+  // Validate question IDs
+  const validQuestionIds = ['pet', 'city', 'friend', 'car', 'concert'];
+  const questions = [question1, question2, question3];
+  
+  // Check if all questions are valid
+  if (!questions.every(q => validQuestionIds.includes(q))) {
+    return res.status(400).json({ error: 'Invalid security question ID' });
+  }
+
+  // Check for duplicate questions
+  if (new Set(questions).size !== questions.length) {
+    return res.status(400).json({ error: 'Duplicate security questions are not allowed' });
+  }
+
+  // Validate answers (not empty and reasonable length)
+  const answers = [answer1, answer2, answer3];
+  if (!answers.every(a => a && a.length >= 2 && a.length <= 50)) {
+    return res.status(400).json({ error: 'Answers must be between 2 and 50 characters' });
+  }
+
+  next();
+};
+
+module.exports = { validateSignup, validateSecurityQuestions }; 

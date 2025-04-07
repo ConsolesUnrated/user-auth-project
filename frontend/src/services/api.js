@@ -6,18 +6,32 @@ const handleResponse = async (response) => {
     const errorData = await response.json();
     let errorMessage = 'API request failed';
     
-    if (errorData.message) {
+    if (errorData.error) {
       // For authentication errors, provide a generic message
-      if (response.status === 401 || response.status === 404) {
-        errorMessage = 'Invalid credentials. Please try again.';
+      if (response.status === 401) {
+        if (errorData.remainingAttempts !== undefined) {
+          if (errorData.remainingAttempts === 0) {
+            // When no attempts left, treat it as a lockout
+            const error = new Error('Too many failed attempts');
+            error.status = 429;
+            error.data = errorData;
+            throw error;
+          }
+          errorMessage = `Verification failed. ${errorData.remainingAttempts} attempts remaining.`;
+        } else {
+          errorMessage = 'Verification failed. Please try again.';
+        }
       } else if (response.status === 429) {
-        errorMessage = 'Too many failed attempts. Please try again later.';
+        errorMessage = 'Too many attempts. Please try again later.';
       } else {
-        errorMessage = errorData.message;
+        errorMessage = 'An unexpected error occurred. Please try again.';
       }
     }
     
-    throw new Error(errorMessage);
+    const error = new Error(errorMessage);
+    error.status = response.status;
+    error.data = errorData;
+    throw error;
   }
   return response.json();
 };
@@ -88,13 +102,16 @@ export const authAPI = {
   },
 
   // Security Questions (Password Reset)
-  submitSecurityQuestionsReset: async (answers) => {
+  verifySecurityQuestions: async (answers) => {
     const response = await fetch(`${API_BASE_URL}/auth/security-questions-reset`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(answers),
+      body: JSON.stringify({
+        email: localStorage.getItem('recoveryEmail'),
+        securityAnswers: answers
+      }),
     });
     return handleResponse(response);
   },
@@ -118,7 +135,10 @@ export const authAPI = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ newPassword }),
+      body: JSON.stringify({ 
+        newPassword,
+        email: localStorage.getItem('recoveryEmail')
+      }),
     });
     return handleResponse(response);
   },

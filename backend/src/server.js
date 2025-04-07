@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { validateSignup } = require('./middleware/validation');
+const { validateSignup, validateSecurityQuestions } = require('./middleware/validation');
 const { query } = require('./config/db');
 const { logDatabaseOperation } = require('./utils/logger');
 const bcrypt = require('bcrypt');
@@ -184,7 +184,7 @@ app.post('/api/auth/signup', validateSignup, async (req, res) => {
 });
 
 // Security Questions endpoint (for signup)
-app.post('/api/auth/security-questions-signup', async (req, res) => {
+app.post('/api/auth/security-questions-signup', validateSecurityQuestions, async (req, res) => {
   try {
     const { 
       userId, 
@@ -196,8 +196,9 @@ app.post('/api/auth/security-questions-signup', async (req, res) => {
       answer3
     } = req.body;
     
+    // Store only the question IDs
     await query(
-      'INSERT INTO security_questions (user_id, question1, answer1, question2, answer2, question3, answer3) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      'INSERT INTO security_questions (user_id, question1_id, answer1, question2_id, answer2, question3_id, answer3) VALUES ($1, $2, $3, $4, $5, $6, $7)',
       [userId, question1, answer1, question2, answer2, question3, answer3]
     );
 
@@ -247,14 +248,20 @@ app.post('/api/auth/request-password-reset', async (req, res) => {
       { expiresIn: '1h' }
     );
     
-    // Get user ID
+    // Check if user exists
     const userResult = await query(
       'SELECT id FROM users WHERE email = $1',
       [email]
     );
     
+    // If user doesn't exist, log it server-side but return success response
     if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      console.log(`Password reset attempted for nonexistent email: ${email}`);
+      // Return success anyway for security (don't reveal if user exists)
+      return res.json({
+        success: true,
+        message: 'If your email is registered, you will receive reset instructions'
+      });
     }
     
     const userId = userResult.rows[0].id;
@@ -269,7 +276,7 @@ app.post('/api/auth/request-password-reset', async (req, res) => {
     
     res.json({
       success: true,
-      message: 'Password reset email sent successfully'
+      message: 'If your email is registered, you will receive reset instructions'
     });
   } catch (error) {
     console.error('Password reset request error:', error);
@@ -280,32 +287,98 @@ app.post('/api/auth/request-password-reset', async (req, res) => {
 // Security Questions endpoint (for password reset)
 app.post('/api/auth/security-questions-reset', async (req, res) => {
   try {
-    const { email, answer1, answer2 } = req.body;
+    const { email, securityAnswers } = req.body;
+    
+    // Check for recent failed attempts
+    const recentAttempts = await query(
+      `SELECT COUNT(*) as failed_attempts 
+       FROM password_reset_attempts 
+       WHERE email = $1 
+       AND status = 'failed' 
+       AND attempt_timestamp > NOW() - INTERVAL '3 minutes'`,
+      [email]
+    );
+
+    const failedAttempts = parseInt(recentAttempts.rows[0].failed_attempts);
+    
+    if (failedAttempts >= 3) {
+      // Log the locked out attempt
+      await query(
+        'INSERT INTO password_reset_attempts (email, status, failure_reason) VALUES ($1, $2, $3)',
+        [email, 'failed', 'Account locked due to too many failed attempts']
+      );
+      
+      return res.status(429).json({ 
+        locked: true,
+        remainingTime: 180 // 3 minutes in seconds
+      });
+    }
     
     // Get user's security questions
     const result = await query(
-      `SELECT sq.* FROM security_questions sq 
+      `SELECT sq.*, u.id as user_id FROM security_questions sq 
        JOIN users u ON sq.user_id = u.id 
        WHERE u.email = $1`,
       [email]
     );
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Security questions not found' });
+      // Log failed attempt on server side only
+      console.log(`Security questions attempted for nonexistent email: ${email}`);
+      await query(
+        'INSERT INTO password_reset_attempts (email, status, failure_reason) VALUES ($1, $2, $3)',
+        [email, 'failed', 'Security questions not found']
+      );
+      
+      // Return generic response (don't reveal user doesn't exist)
+      return res.status(200).json({ 
+        success: false,
+        attemptsLeft: 2 - failedAttempts
+      });
     }
     
     const questions = result.rows[0];
     
-    // Verify answers
-    if (questions.answer1 !== answer1 || questions.answer2 !== answer2) {
-      return res.status(401).json({ error: 'Invalid answers' });
+    // Verify answers using question IDs
+    let correctAnswers = 0;
+    
+    // Check each answer
+    for (const { questionId, answer } of securityAnswers) {
+      if (
+        (questions.question1_id === questionId && questions.answer1 === answer) ||
+        (questions.question2_id === questionId && questions.answer2 === answer) ||
+        (questions.question3_id === questionId && questions.answer3 === answer)
+      ) {
+        correctAnswers++;
+      }
     }
+    
+    // Require at least 2 correct answers
+    if (correctAnswers < 2) {
+      // Log failed attempt with sensitive information only on server
+      console.log(`Security verification failed for email: ${email}`);
+      await query(
+        'INSERT INTO password_reset_attempts (user_id, email, status, failure_reason) VALUES ($1, $2, $3, $4)',
+        [questions.user_id, email, 'failed', 'Incorrect security answers']
+      );
+      
+      const attemptsLeft = 2 - failedAttempts;
+      return res.status(200).json({ 
+        success: false,
+        attemptsLeft
+      });
+    }
+
+    // Log successful attempt
+    await query(
+      'INSERT INTO password_reset_attempts (user_id, email, status) VALUES ($1, $2, $3)',
+      [questions.user_id, email, 'success']
+    );
 
     logDatabaseOperation('Security Questions Verified', { email });
     
     res.json({
-      success: true,
-      message: 'Security questions verified successfully'
+      success: true
     });
   } catch (error) {
     console.error('Security questions verification error:', error);
@@ -316,10 +389,24 @@ app.post('/api/auth/security-questions-reset', async (req, res) => {
 // Reset password endpoint
 app.post('/api/auth/reset-password', async (req, res) => {
   try {
-    const { token, newPassword } = req.body;
+    const { newPassword, email } = req.body;
     
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!email) {
+      return res.status(400).json({ success: false });
+    }
+
+    // Get user ID
+    const userResult = await query(
+      'SELECT id FROM users WHERE email = $1',
+      [email]
+    );
+    
+    if (userResult.rows.length === 0) {
+      console.log(`Password reset attempted for nonexistent email: ${email}`);
+      return res.status(200).json({ success: false });
+    }
+    
+    const userId = userResult.rows[0].id;
     
     // Hash new password
     const salt = await bcrypt.genSalt(10);
@@ -327,11 +414,11 @@ app.post('/api/auth/reset-password', async (req, res) => {
     
     // Update password
     await query(
-      'UPDATE users SET password_hash = $1 WHERE email = $2',
-      [passwordHash, decoded.email]
+      'UPDATE users SET password_hash = $1 WHERE id = $2',
+      [passwordHash, userId]
     );
 
-    logDatabaseOperation('Password Reset', { email: decoded.email });
+    logDatabaseOperation('Password Reset', { email });
     
     res.json({
       success: true,
@@ -339,7 +426,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     });
   } catch (error) {
     console.error('Password reset error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ success: false });
   }
 });
 
@@ -350,6 +437,46 @@ app.post('/api/auth/logout', (req, res) => {
     success: true,
     message: 'Logged out successfully'
   });
+});
+
+// Check lockout status endpoint
+app.post('/api/auth/check-lockout', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Check for recent failed attempts
+    const recentAttempts = await query(
+      `SELECT 
+        COUNT(*) as failed_attempts,
+        MAX(attempt_timestamp) as last_attempt
+       FROM password_reset_attempts 
+       WHERE email = $1 
+       AND status = 'failed' 
+       AND attempt_timestamp > NOW() - INTERVAL '3 minutes'`,
+      [email]
+    );
+
+    const failedAttempts = parseInt(recentAttempts.rows[0].failed_attempts);
+    const lastAttempt = recentAttempts.rows[0].last_attempt;
+    
+    if (failedAttempts >= 3 && lastAttempt) {
+      const lockoutEndTime = new Date(lastAttempt);
+      lockoutEndTime.setMinutes(lockoutEndTime.getMinutes() + 3); // 3 minutes lockout
+      const remainingTime = Math.ceil((lockoutEndTime - new Date()) / 1000);
+      
+      if (remainingTime > 0) {
+        return res.json({ 
+          locked: true,
+          remainingTime
+        });
+      }
+    }
+    
+    res.json({ locked: false });
+  } catch (error) {
+    console.error('Check lockout error:', error);
+    res.status(500).json({ success: false });
+  }
 });
 
 const PORT = process.env.PORT || 3001;

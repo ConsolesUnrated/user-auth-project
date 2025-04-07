@@ -1,9 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import lockIcon from '../../images/locked-svgrepo.svg';
 
 const LockedOutPage = () => {
+  const navigate = useNavigate();
+
   const handleBackToLogin = () => {
-    // Handle back to login logic here
+    navigate('/login');
   };
 
   return (
@@ -14,7 +17,7 @@ const LockedOutPage = () => {
         </div>
         <h1 style={styles.title}>Account Temporarily Locked</h1>
         <p style={styles.message}>Too many failed attempts</p>
-        <p style={styles.timer}>Try again in Later</p>
+        <p style={styles.timer}>Try again in 3 minutes</p>
         <button onClick={handleBackToLogin} style={styles.button}>
           Back to Login
         </button>

@@ -22,11 +22,11 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS security_questions (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    question1 VARCHAR(255) NOT NULL,
+    question1_id VARCHAR(50) NOT NULL,
     answer1 VARCHAR(255) NOT NULL,
-    question2 VARCHAR(255) NOT NULL,
+    question2_id VARCHAR(50) NOT NULL,
     answer2 VARCHAR(255) NOT NULL,
-    question3 VARCHAR(255) NOT NULL,
+    question3_id VARCHAR(50) NOT NULL,
     answer3 VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -52,4 +52,15 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     token VARCHAR(255) NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create password_reset_attempts table
+CREATE TABLE IF NOT EXISTS password_reset_attempts (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    email VARCHAR(255) NOT NULL,
+    attempt_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ip_address VARCHAR(45),
+    status VARCHAR(20) NOT NULL, -- 'success' or 'failed'
+    failure_reason VARCHAR(255) -- null for successful attempts
 ); 

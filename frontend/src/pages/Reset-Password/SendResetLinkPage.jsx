@@ -11,12 +11,16 @@ const SendResetLinkPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await authStore.startPasswordRecovery(email);
-      setMessage('If this account exists, you will receive instructions on how to reset your password via email.');
-      // Navigate to security questions page
-      navigate('/security-questions');
+      const response = await authStore.startPasswordRecovery(email);
+      // Only navigate if the email exists and response is successful
+      if (response && response.success && response.emailExists) {
+        navigate('/security-questions');
+      } else {
+        // Generic message for security reasons
+        setMessage('If this account exists, you will receive instructions on how to reset your password via email.');
+      }
     } catch (error) {
-      // Still show the same message for security reasons
+      // Show the same message regardless of success/failure for security
       setMessage('If this account exists, you will receive instructions on how to reset your password via email.');
     }
   };

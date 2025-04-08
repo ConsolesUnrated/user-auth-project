@@ -143,6 +143,18 @@ export const authAPI = {
     return handleResponse(response);
   },
 
+  // Check account lockout status
+  checkAccountLockout: async (email) => {
+    const response = await fetch(`${API_BASE_URL}/auth/check-lockout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+    return handleResponse(response);
+  },
+
   logout: async () => {
     const response = await fetch(`${API_BASE_URL}/auth/logout`, {
       method: 'POST',

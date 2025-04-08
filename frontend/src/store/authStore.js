@@ -230,23 +230,27 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await authAPI.requestPasswordReset(email);
-      if (!response || !response.success) {
-        throw new Error('Failed to initiate password recovery');
+      
+      // Store the recovery email only if it exists
+      if (response && response.success && response.emailExists) {
+        localStorage.setItem('recoveryEmail', email);
+        set({ 
+          passwordRecoveryInProgress: true,
+          currentStep: 'recovery_started',
+          error: null,
+          isLoading: false
+        });
+      } else {
+        set({ isLoading: false });
       }
-      // Store the recovery email
-      localStorage.setItem('recoveryEmail', email);
-      set({ 
-        passwordRecoveryInProgress: true,
-        currentStep: 'recovery_started',
-        error: null,
-        isLoading: false
-      });
+      
+      return response;
     } catch (error) {
       set({ 
         error: error.message || 'Failed to initiate password recovery',
         isLoading: false
       });
-      throw error;
+      return { success: false, error: error.message };
     }
   },
 
@@ -257,6 +261,54 @@ const useAuthStore = create((set, get) => ({
     } catch (error) {
       // Return the error response without throwing
       return error.response?.data || { success: false, attemptsLeft: 0 };
+    }
+  },
+
+  // Add new method for handling security questions verification flow
+  handleSecurityQuestionsVerification: async (answers) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await authAPI.verifySecurityQuestions(answers);
+      
+      if (response.success) {
+        // Set security verified state
+        const newState = { 
+          securityVerified: true,
+          currentStep: 'security_verified',
+          isLoading: false
+        };
+        set(newState);
+        
+        // Manually save state to localStorage
+        const currentState = get();
+        saveState(currentState);
+        
+        // Navigate to reset password page
+        setTimeout(() => {
+          window.location.href = '/reset-password';
+        }, 200);
+        
+        return { success: true };
+      } else if (response.attemptsLeft === 0) {
+        // Account is locked, navigate to locked out page
+        set({ isLoading: false });
+        window.location.replace('/locked-out');
+        return { success: false, locked: true };
+      } else {
+        // Return attempts info without navigation
+        set({ isLoading: false });
+        return { 
+          success: false, 
+          error: `Verification failed. ${response.attemptsLeft} ${response.attemptsLeft === 1 ? 'attempt' : 'attempts'} remaining.`,
+          attemptsLeft: response.attemptsLeft 
+        };
+      }
+    } catch (error) {
+      set({ isLoading: false });
+      return { 
+        success: false, 
+        error: error.message || 'An unexpected error occurred. Please try again.' 
+      };
     }
   },
 
@@ -281,6 +333,22 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
+  // Add method to check if account is locked for security questions
+  checkLockoutStatus: async () => {
+    try {
+      const email = localStorage.getItem('recoveryEmail');
+      if (!email) {
+        return { locked: false, error: 'No recovery email found' };
+      }
+      
+      const response = await authAPI.checkAccountLockout(email);
+      return response;
+    } catch (error) {
+      console.error('Failed to check account lockout status:', error);
+      return { locked: false, error: error.message };
+    }
+  },
+
   resetPassword: async (newPassword) => {
     set({ isLoading: true, error: null });
     try {
@@ -288,6 +356,8 @@ const useAuthStore = create((set, get) => ({
       if (!response || !response.success) {
         throw new Error('Failed to reset password');
       }
+      
+      // Update state
       set({
         passwordRecoveryInProgress: false,
         securityVerified: false,
@@ -295,6 +365,9 @@ const useAuthStore = create((set, get) => ({
         currentStep: 'password_reset_completed',
         isLoading: false
       });
+      
+      // Navigate to login page
+      window.location.href = '/login';
       return true;
     } catch (error) {
       set({ error: error.message, isLoading: false });

@@ -272,18 +272,27 @@ const useAuthStore = create((set, get) => ({
       
       if (response.success) {
         // Set security verified state
-        set({ 
+        const newState = { 
           securityVerified: true,
+          currentStep: 'security_verified',
           isLoading: false
-        });
+        };
+        set(newState);
         
-        // Navigate to reset password page on success
-        window.location.href = '/reset-password';
+        // Manually save state to localStorage
+        const currentState = get();
+        saveState(currentState);
+        
+        // Navigate to reset password page
+        setTimeout(() => {
+          window.location.href = '/reset-password';
+        }, 200);
+        
         return { success: true };
       } else if (response.attemptsLeft === 0) {
         // Account is locked, navigate to locked out page
         set({ isLoading: false });
-        window.location.href = '/locked-out';
+        window.location.replace('/locked-out');
         return { success: false, locked: true };
       } else {
         // Return attempts info without navigation

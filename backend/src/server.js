@@ -8,6 +8,10 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 
+//Register Download Route
+const downloadRoute = require("./routes/download.route");
+app.use("/", downloadRoute);
+
 // Middleware
 app.use(cors());
 app.use(express.json());

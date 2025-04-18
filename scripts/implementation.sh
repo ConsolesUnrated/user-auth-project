@@ -1,20 +1,53 @@
 #!/bin/bash
 # implementation.sh
-# This script implements security policies using IPTables firewall rules, configures the Snort IDS, and secures MySQL.
+# Secure PostgreSQL, configure IPTables firewall rules, and set up Snort IDS.
+
+set -euo pipefail
 
 # ----------------------------
-# Secure MySQL Automatically
+# Secure PostgreSQL Automatically
 # ----------------------------
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'ThisIsNotSecurePLeaseFix';" # TODO Replace plain text password
-sudo mysql -e "DELETE FROM mysql.user WHERE User='';"
-sudo mysql -e "DROP DATABASE IF EXISTS test;"
-sudo mysql -e "FLUSH PRIVILEGES;"
+
+# 1. Set a strong password for the default postgres user
+#    → Replace 'StrongPostgresPasswordReplace' with a secure secret
+sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'StrongPostgresPasswordReplace';"
+
+# 2. Remove any empty-role accounts
+sudo -u postgres psql -tA -c "SELECT rolname FROM pg_roles WHERE rolname = ''" | \
+  grep -q . && sudo -u postgres psql -c "DROP ROLE \"\";"
+
+# 3. Drop any default/test database
+sudo -u postgres psql -c "DROP DATABASE IF EXISTS test;"
+
+# 4. Lock down remote access
+#    - Only listen on localhost
+#    - Enforce md5 authentication for all local connections
+PG_CONF="/etc/postgresql/$(ls /etc/postgresql)/main/postgresql.conf"
+HBA_CONF="/etc/postgresql/$(ls /etc/postgresql)/main/pg_hba.conf"
+
+# Backup originals
+sudo cp "$PG_CONF" "$PG_CONF.bak"
+sudo cp "$HBA_CONF" "$HBA_CONF.bak"
+
+# Listen only on localhost
+sudo sed -ri "s/^#?(listen_addresses)\s*=.*/\1 = 'localhost'/" "$PG_CONF"
+
+# In pg_hba.conf, replace any host‑all‑all lines with strict local md5
+sudo sed -ri "s!^host\s+all\s+all\s+0\.0\.0\.0/0\s+\w+!# disabled remote access!" "$HBA_CONF"
+sudo sed -ri "s!^host\s+all\s+all\s+::/0\s+\w+!# disabled remote access!" "$HBA_CONF"
+# Ensure local connections use md5
+sudo sed -ri "s!^(local\s+all\s+all\s+).*!\1md5!" "$HBA_CONF"
+
+# Reload PostgreSQL to apply changes
+sudo systemctl restart postgresql
+
+echo "PostgreSQL hardened: password set, empty roles removed, remote access disabled."
 
 # ----------------------------
 # IPTables Firewall Configuration
 # ----------------------------
 
-# Flush all current IPTables rules
+# Flush all existing rules
 sudo iptables -F
 sudo iptables -X
 sudo iptables -t nat -F
@@ -22,47 +55,46 @@ sudo iptables -t nat -X
 sudo iptables -t mangle -F
 sudo iptables -t mangle -X
 
-# Set default policies: drop all incoming and forwarded traffic; allow all outgoing traffic
+# Default policies
 sudo iptables -P INPUT DROP
 sudo iptables -P FORWARD DROP
 sudo iptables -P OUTPUT ACCEPT
 
-# Allow all traffic on the loopback interface
+# Allow loopback
 sudo iptables -A INPUT -i lo -j ACCEPT
 
-# Allow incoming packets that are part of established or related connections
-sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+# Allow established/related
+sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
-# Allow incoming SSH traffic on port 22
-sudo iptables -A INPUT -p tcp --dport 22 -m state --state NEW -j ACCEPT
+# SSH, HTTP, HTTPS, and Node.js backend
+sudo iptables -A INPUT -p tcp --dport 22   -m conntrack --ctstate NEW -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 80   -m conntrack --ctstate NEW -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 443  -m conntrack --ctstate NEW -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 3000 -m conntrack --ctstate NEW -j ACCEPT
 
-# Allow incoming HTTP traffic on port 80
-sudo iptables -A INPUT -p tcp --dport 80 -m state --state NEW -j ACCEPT
+# Allow PostgreSQL only from localhost
+sudo iptables -A INPUT -p tcp -s 127.0.0.1 --dport 5432 -m conntrack --ctstate NEW -j ACCEPT
 
-# Allow incoming HTTPS traffic on port 443
-sudo iptables -A INPUT -p tcp --dport 443 -m state --state NEW -j ACCEPT
-
-# Allow incoming Node.js backend traffic on port 3000
-sudo iptables -A INPUT -p tcp --dport 3000 -m state --state NEW -j ACCEPT
-
-# Log dropped packets
+# Log and drop everything else
 sudo iptables -A INPUT -j LOG --log-prefix "IPTables-Dropped: " --log-level 4
 
-# Save IPTables rules persistently
+# Persist rules
 sudo netfilter-persistent save
+
+echo "IPTables rules applied and saved."
 
 # ----------------------------
 # Snort IDS Configuration
 # ----------------------------
 
-# Backup original Snort configuration file
+# Backup Snort config
 sudo cp /etc/snort/snort.conf /etc/snort/snort.conf.bak
 
-# Add custom Snort rule for detecting ICMP traffic
-echo 'alert icmp any any -> any any (msg:"ICMP Packet Detected"; sid:1000001; rev:1;)' | sudo tee -a /etc/snort/rules/local.rules
+# Add a simple ICMP-detect rule
+echo 'alert icmp any any -> any any (msg:"ICMP Packet Detected"; sid:1000001; rev:1;)' | \
+  sudo tee -a /etc/snort/rules/local.rules
 
-# Restart Snort to load new rules
+# Restart Snort
 sudo systemctl restart snort
 
-# Log completion message
-echo "IPTables firewall policies, MySQL security settings, and Snort IDS configuration have been successfully implemented."
+echo "Snort IDS reloaded with custom rules."
